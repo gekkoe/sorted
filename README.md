@@ -34,3 +34,7 @@ to explore this new technology, which the client indicated they are using in a p
 interview.
 * I'll be coding the project in Emacs with Spacemacs, but it should open and build fine
 in any other properly configured Clojure development environment.
+
+### Coding Standards
+I will be using some [fairly standard Clojure conventions](https://web.archive.org/web/20181116030946/http://dev.clojure.org/display/community/Library+Coding+Standards)
+such as the ones outlined in this archived post on the Clojure developers blog.
