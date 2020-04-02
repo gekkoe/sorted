@@ -6,7 +6,7 @@
                  [compojure "1.6.1"]
                  [http-kit "2.3.0"]
                  [liberator "0.15.3"]
-                 [org.clojure/clojure "1.10.0"]
+                 [org.clojure/clojure "1.10.1"]
                  [org.clojure/spec.alpha "0.2.187"]
                  [org.clojure/test.check "1.0.0"]
                  [ring/ring-core "1.8.0"]
