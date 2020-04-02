@@ -17,16 +17,16 @@ familiar with or that cover technologies (like generative testing) that I discus
 a prior interview with the client and would like to incorporate here to learn more
 about them.
 * The following (in no particular order) will be used for this project:
-1. ring/compojure - These still appear right toward the top for basic web application
+  - ring/compojure - These still appear right toward the top for basic web application
 and routing needs.
-2. clj-time - Clojure wrapper for the popular Joda Time library.
-3. liberator - A commonly used REST library which I've had some experience with.
-4. http-kit - A commonly used HTTP client/server.
-5. clojure.test - Standard testing library.
-6. clojure.spec - A data specification library that I'd like to explore more here.
-7. test.check - Listed in the [Clojure.org Spec Page](https://clojure.org/about/spec)
+  - clj-time - Clojure wrapper for the popular Joda Time library.
+  - liberator - A commonly used REST library which I've had some experience with.
+  - http-kit - A commonly used HTTP client/server.
+  - clojure.test - Standard testing library.
+  - clojure.spec - A data specification library that I'd like to explore more here.
+  - test.check - Listed in the [Clojure.org Spec Page](https://clojure.org/about/spec)
 as a generative test library that uses clojure.spec to create better test coverage.
-8. cheshire - A JSON library in common use that is generally more performant than data.json.
+  - cheshire - A JSON library in common use that is generally more performant than data.json.
 
 ### Build Tools
 * This project will start out with lein, as this is what I'm most familiar with. At some
