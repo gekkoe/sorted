@@ -26,7 +26,7 @@ customer and would like to incorporate here to learn more about them.
   - ring - A web application library for Clojure.
   - test.check - Listed in the [clojure.org spec page](https://clojure.org/about/spec)
 as a generative test library that uses clojure.spec to create better test coverage.
-  - tools.cli - Command line argument parser.
+  - tools.cli - A command line argument parser.
 
 ### Build Tools
 * This project will start out with lein, as this is what I'm most familiar with. At some
