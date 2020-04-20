@@ -4,16 +4,16 @@
             [sorted.errors :as err]
             [clojure.spec.alpha :as s]))
 
-(def ^:private existant-file "README.md")
-(def ^:private non-existant-file "non-existant-file.txt")
+(def ^:private existent-file "README.md")
+(def ^:private non-existent-file "non-existent-file.txt")
 (def ^:private invalid-file 3)
 
 (deftest exists?-test
   (testing "Checking if a file exists"
     (testing "returns true when the file does exist"
-      (is (exists? existant-file)))
+      (is (exists? existent-file)))
     (testing "returns false when the file does not exist"
-      (is (not (exists? non-existant-file))))
+      (is (not (exists? non-existent-file))))
     (let [exists-error "Error in exists?"
           ex (exists? invalid-file)]
       (testing "returns an error when passed an invaldid argument"
@@ -23,14 +23,14 @@
 
 (deftest text-read-test
   (testing "Reading a known file"
-    (let [file (text-read existant-file)]
+    (let [file (text-read existent-file)]
       (testing "returns a vector"
         (is (vector? file))
         (testing "containing only strings"
           (is (every? string? file))))))
-  (testing "Reading a non-existant file"
-    (let [bad-file non-existant-file
-          file-not-found (str "Error in text-read: " non-existant-file " (No such file or directory)")
+  (testing "Reading a non-existent file"
+    (let [bad-file non-existent-file
+          file-not-found (str "Error in text-read: " non-existent-file " (No such file or directory)")
           file (text-read bad-file)]
       (testing "returns an error"
         (is (s/valid? ::err/error file))
