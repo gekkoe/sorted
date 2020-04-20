@@ -4,7 +4,6 @@
             [sorted.errors :as err]
             [clojure.spec.alpha :as s]))
 
-
 (deftest exists?-test
   (let [existant-file "README.md"
         non-existant-file "non-existant-file.txt"
