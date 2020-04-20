@@ -28,11 +28,11 @@
         (is (vector? file))
         (testing "containing only strings"
           (is (every? string? file))))))
-  (testing "Reading a non-existant file."
+  (testing "Reading a non-existant file"
     (let [bad-file non-existant-file
           file-not-found (str "Error in text-read: " non-existant-file " (No such file or directory)")
           file (text-read bad-file)]
-      (testing "Returns an error"
+      (testing "returns an error"
         (is (s/valid? ::err/error file))
         (testing "containing a file not found message"
           (is (= file-not-found (::err/message file)))))))
