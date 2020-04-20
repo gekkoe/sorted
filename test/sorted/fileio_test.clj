@@ -4,21 +4,22 @@
             [sorted.errors :as err]
             [clojure.spec.alpha :as s]))
 
+(def ^:private existant-file "README.md")
+(def ^:private non-existant-file "non-existant-file.txt")
+(def ^:private invalid-file 3)
+
 (deftest exists?-test
-  (let [existant-file "README.md"
-        non-existant-file "non-existant-file.txt"
-        invalid-file 3]
-    (testing "Checking if a file exists"
-      (testing "returns true when the file does exist"
-        (is (exists? existant-file)))
-      (testing "returns false when the file does not exist"
-        (is (not (exists? non-existant-file))))
-      (let [exists-error "Error in exists?"
-            ex (exists? invalid-file)]
-        (testing "returns an error when passed an invaldid argument"
-          (is (s/valid? ::err/error ex))
-          (testing "beginning with the expected error text"
-            (is (= exists-error (subs (::err/message ex) 0 (count exists-error))))))))))
+  (testing "Checking if a file exists"
+    (testing "returns true when the file does exist"
+      (is (exists? existant-file)))
+    (testing "returns false when the file does not exist"
+      (is (not (exists? non-existant-file))))
+    (let [exists-error "Error in exists?"
+          ex (exists? invalid-file)]
+      (testing "returns an error when passed an invaldid argument"
+        (is (s/valid? ::err/error ex))
+        (testing "beginning with the expected error text"
+          (is (= exists-error (subs (::err/message ex) 0 (count exists-error)))))))))
 
 (deftest text-read-test
   (testing "Reading a known file"
