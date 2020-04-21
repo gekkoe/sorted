@@ -1,8 +1,7 @@
 (ns sorted.core
   (:require [clojure.tools.cli :refer [parse-opts]]
             [clojure.string :refer [join]]
-            [sorted.fileio :as file]
-            [sorted.errors :as err])
+            [sorted.fileio :as file])
   (:gen-class))
 
 (def usage
