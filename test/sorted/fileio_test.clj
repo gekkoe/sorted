@@ -1,7 +1,7 @@
 (ns sorted.fileio-test
   (:require [clojure.test :refer :all]
             [sorted.fileio :refer :all]
-            [sorted.errors :as err]
+            [failjure.core :as f]
             [clojure.spec.alpha :as s]))
 
 (def ^:private existent-file "README.md")
@@ -14,32 +14,33 @@
       (is (exists? existent-file)))
     (testing "returns false when the file does not exist"
       (is (not (exists? non-existent-file))))
-    (let [exists-error "Error in exists?"
+    (let [error-msg "Error in exists?: No implementation of method: :as-file of protocol: #'clojure.java.io/Coercions found for class: java.lang.Long"
+          exists-error "Error in exists?"
           ex (exists? invalid-file)]
       (testing "returns an error when passed an invaldid argument"
-        (is (s/valid? ::err/error ex))
-        (testing "beginning with the expected error text"
-          (is (= exists-error (subs (::err/message ex) 0 (count exists-error)))))))))
+        (is (f/failed? ex))
+        (testing "with the expected error message text"
+          (is (= error-msg (:message ex))))))))
 
 (deftest text-read-test
   (testing "Reading a known file"
-    (let [file (text-read existent-file)]
+    (let [file-lines (text-read existent-file)]
       (testing "returns a vector"
-        (is (vector? file))
+        (is (vector? file-lines))
         (testing "containing only strings"
-          (is (every? string? file))))))
+          (is (every? string? file-lines))))))
   (testing "Reading a non-existent file"
     (let [bad-file non-existent-file
           file-not-found (str "Error in text-read: " non-existent-file " (No such file or directory)")
-          file (text-read bad-file)]
+          file-lines (text-read bad-file)]
       (testing "returns an error"
-        (is (s/valid? ::err/error file))
+        (is (f/failed? file-lines))
         (testing "containing a file not found message"
-          (is (= file-not-found (::err/message file)))))))
+          (is (= file-not-found (f/message file-lines)))))))
   (testing "Reading an invalid file name"
-    (let [invalid-error "Error in text-read: No matching ctor found for class java.io.FileReader"
-          file (text-read invalid-file)]
+    (let [error-msg "Error in text-read: No matching ctor found for class java.io.FileReader"
+          file-lines (text-read invalid-file)]
       (testing "returns an error"
-        (is (s/valid? ::err/error file))
-        (testing "containing the expected error text"
-          (is (= invalid-error (::err/message file))))))))
+        (is (f/failed? file-lines))
+        (testing "containing an exception ojbect"
+          (is (= error-msg (f/message file-lines))))))))
