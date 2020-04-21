@@ -10,7 +10,7 @@
 
 (def cli-options
   ;; An option with a required argument
-  [["-p" "--port PORT" "Port number. If not specified, does not start a server."
+  [#_["-p" "--port PORT" "Port number. If not specified, does not start a server."
       :parse-fn #(Integer/parseInt %)
       :validate [#(< 0 % 0x10000) "Must be a number between 0 and 65536"]]
    ["-h" "--help" "Prints this help text.\n\n"]])
