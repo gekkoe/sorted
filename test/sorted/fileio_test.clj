@@ -16,11 +16,11 @@
       (is (not (exists? non-existent-file))))
     (let [error-msg "Error in exists?: No implementation of method: :as-file of protocol: #'clojure.java.io/Coercions found for class: java.lang.Long"
           exists-error "Error in exists?"
-          ex (exists? invalid-file)]
+          returned (exists? invalid-file)]
       (testing "returns an error when passed an invaldid argument"
-        (is (f/failed? ex))
+        (is (f/failed? returned))
         (testing "with the expected error message text"
-          (is (= error-msg (:message ex))))))))
+          (is (= error-msg (:message returned))))))))
 
 (deftest text-read-test
   (testing "Reading a known file"

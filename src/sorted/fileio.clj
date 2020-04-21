@@ -15,7 +15,7 @@
 
 (defn text-read
   "Returns a vector containing the lines of file-name if it exists.
-  The output if file-name is a binary file is undefined.
+  The output, if file-name is a binary file, is undefined.
   Returns a Failure object if an exception is thrown."
   [file-name]
   (try
