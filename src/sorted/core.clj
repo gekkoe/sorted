@@ -6,7 +6,8 @@
 
 (def usage
   (str "Usage: sorted [options] file1 file2 file3\n"
-       "This program can support more than 3 files if desired, but at least one must be provided.\n\n"))
+       "This program can support more than 3 files if desired, "
+       "but at least one must be provided.\n\n"))
 
 (def cli-options
   ;; An option with a required argument
@@ -23,7 +24,8 @@
   (let [opts (parse-opts args cli-options)
         file-names (:arguments opts)]
     (cond
-      (or (get-in opts [:options :help]) (empty? file-names)) (println (str usage (:summary opts)))
+      (or (get-in opts [:options :help])
+          (empty? file-names)) (println (str usage (:summary opts)))
       (:errors opts) (println (join "\n" (:errors opts)))
       ;; For now just print out any files indicated on command line.
       :else (map println (map (partial join "\n")
