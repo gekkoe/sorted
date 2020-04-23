@@ -2,8 +2,6 @@
   (:require [clojure.tools.cli :refer [parse-opts]]
             [clojure.string :refer [join]]
             [sorted.person :as p]
-            [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as gen]
             [sorted.fileio :as file])
   (:gen-class))
 
