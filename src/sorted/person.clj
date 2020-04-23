@@ -33,7 +33,7 @@
   (let [raw-vals (cond (.contains s "|") (split-trim s #"|")
                        (.contains s ",") (split-trim s #",")
                        :else (split-trim s #"\s+"))
-        ;; TODO: Put failjure try clause in here for exceptoins thrown by
+        ;; TODO: Put failjure try clause in here for exceptions thrown by
         ;;       clj-time on bad dates.
         vals (conj (vec (drop-last raw-vals)) (ctf/parse (last raw-vals)))
         person (vals->person vals)]
