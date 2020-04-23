@@ -30,7 +30,7 @@
              :dev           [:project/dev :profiles/dev]
              :test          [:project/dev :project/test :profiles/test]
 
-             :project/dev   {:jvm-opts ["-D=dev-config.edn"]
+             :project/dev   {:jvm-opts ["-Dconf=dev-config.edn"]
                              :dependencies []
                              :plugins []
                              :source-paths ["env/dev/clj"]
@@ -39,7 +39,7 @@
                                            :timeout 120000}
                              :injections []}
 
-             :project/test  {:jvm-opts ["-dconf=test-config.edn"]
+             :project/test  {:jvm-opts ["-Dconf=test-config.edn"]
                              :resource-paths ["env/test/resources"]}
              :profiles/dev {}
              :profiles/test {}})
