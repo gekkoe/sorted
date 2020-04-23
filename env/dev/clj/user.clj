@@ -12,6 +12,8 @@
 
 (add-tap (bound-fn* clojure.pprint/pprint))
 
+(def valid? s/valid?)
+
 #_(defn start
   "Starts application.
   You'll usually want to run this on startup."
