@@ -20,6 +20,7 @@ customer and would like to incorporate here to learn more about them.
   - clj-time - Clojure wrapper for the popular Joda Time library.
   - clojure.spec - A data specification library that I'd like to explore more here.
   - clojure.spec.gen - Generative testing for specs.
+  - clojure.spec.test - Testing library for specs.
   - clojure.test - Clojure's standard testing library.
   - clojure.tools.cli - Simple cli parsing.
   - compojure - A routing library for ring.
