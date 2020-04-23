@@ -4,8 +4,11 @@
   :dependencies [[cheshire "5.10.0"]
                  [clj-time "0.15.2"]
                  [compojure "1.6.1"]
+                 [cprop "0.1.16"]
+                 [expound "0.8.4"]
                  [http-kit "2.3.0"]
                  [liberator "0.15.3"]
+                 [mount "0.1.16"]
                  [org.clojure/clojure "1.10.1"]
                  [org.clojure/spec.alpha "0.2.187"]
                  [org.clojure/test.check "1.0.0"]
@@ -18,4 +21,25 @@
 
   :target-path "target/%s"
 
-  :profiles {:uberjar {:aot :all}})
+  :profiles {:uberjar {:omit-source true
+                       :aot :all
+                       :uberjar-name "sorted.jar"
+                       :source-paths ["env/prod/clj"]
+                       :resource-paths ["env/prod/resources"]}
+
+             :dev           [:project/dev :profiles/dev]
+             :test          [:project/dev :project/test :profiles/test]
+
+             :project/dev   {:jvm-opts ["-D=dev-config.edn"]
+                             :dependencies []
+                             :plugins []
+                             :source-paths ["env/dev/clj"]
+                             :resource-paths ["env/dev/resources"]
+                             repl-options {:init-ns user
+                                           :timeout 120000}
+                             :injections []}
+
+             :project/test  {:jvm-opts ["-dconf=test-config.edn"]
+                             :resource-paths ["env/test/resources"]}
+             :profiles/dev {}
+             :profiles/test {}})

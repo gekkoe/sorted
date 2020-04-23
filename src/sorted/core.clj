@@ -1,6 +1,9 @@
 (ns sorted.core
   (:require [clojure.tools.cli :refer [parse-opts]]
             [clojure.string :refer [join]]
+            [sorted.person :as p]
+            [clojure.spec.alpha :as s]
+            [clojure.spec.gen.alpha :as gen]
             [sorted.fileio :as file])
   (:gen-class))
 
@@ -27,6 +30,4 @@
       (or (get-in opts [:options :help])
           (empty? file-names)) (println (str usage (:summary opts)))
       (:errors opts) (println (join "\n" (:errors opts)))
-      ;; For now just print out any files indicated on command line.
-      :else (map println (map (partial join "\n")
-                              (map file/text-read file-names))))))
+      :else (map (partial map p/str->person) (map file/text-read file-names)))))
