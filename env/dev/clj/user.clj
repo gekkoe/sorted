@@ -4,6 +4,7 @@
    [sorted.config :refer [env]]
     [clojure.pprint]
     [clojure.spec.alpha :as s]
+    [clojure.java.classpath :as cp]
     [expound.alpha :as expound]
     #_[mount.core :as mount]
     #_[sorted.core :refer [start-app]]))
@@ -13,6 +14,7 @@
 (add-tap (bound-fn* clojure.pprint/pprint))
 
 (def valid? s/valid?)
+(def classpath cp/classpath)
 
 #_(defn start
   "Starts application.

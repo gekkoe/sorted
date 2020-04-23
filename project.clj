@@ -31,7 +31,7 @@
              :test          [:project/dev :project/test :profiles/test]
 
              :project/dev   {:jvm-opts ["-Dconf=dev-config.edn"]
-                             :dependencies []
+                             :dependencies [[org.clojure/java.classpath "1.0.0"]]
                              :plugins []
                              :source-paths ["env/dev/clj"]
                              :resource-paths ["env/dev/resources"]
