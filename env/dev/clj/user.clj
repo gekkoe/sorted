@@ -5,7 +5,7 @@
    [clj-time.format :as ctf]
    [clojure.pprint]
    [clojure.spec.alpha :as s]
-   [clojure.spec.gen.alpha :as g]
+   [clojure.spec.gen.alpha :as gen]
    [clojure.spec.test.alpha :as st]
    [clojure.java.classpath :refer [classpath]]
    [expound.alpha :as expound]
