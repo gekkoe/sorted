@@ -7,14 +7,19 @@
     [clojure.java.classpath :as cp]
     [expound.alpha :as expound]
     #_[mount.core :as mount]
-    #_[sorted.core :refer [start-app]]))
+    [sorted.core :refer :all]
+    [sorted.person :as p]
+    [sorted.fileio :as f]))
 
 (alter-var-root #'s/*explain-out* (constantly expound/printer))
 
 (add-tap (bound-fn* clojure.pprint/pprint))
 
-(def valid? s/valid?)
-(def classpath cp/classpath)
+;; Some reusable vars for use during development.
+(def john "Doe John Male Blue 1/1/1943")
+(def jane "Doe, Jane, Female, Green,     12/1/2001")
+(def june "Doe| June| Female| Red   | 2/1/1983")
+(def jim "Doe| Jim|Male| Purple   |11/21/2014")
 
 #_(defn start
   "Starts application.
