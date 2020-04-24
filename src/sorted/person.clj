@@ -2,12 +2,11 @@
   (:require [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as gen]
             [clojure.string :refer [split trim join blank?]]
-            [clj-time.format :as ctf]
-            [clj-time.coerce :as ctc]
+            [java-time :as jt]
             [failjure.core :as f]))
 
-;; DateTime formatter for clj-time operations
-(def formatter (ctf/formatter "MM/dd/yyyy"))
+;; Formatter for time operations
+(def formatter (jt/formatter "M/d/yyyy"))
 
 (defn no-delims?
   "Searches a string for any instance of the delimiters space, comma, or pipe.
@@ -30,13 +29,26 @@
         (.contains s ",") (split-trim s #",")
         :else (split-trim s #"\s+")))
 
+(defn instant->date-str
+  "Convert a java-time or java.util.Date instant to a local date, truncating any
+  time information it may contain. Uses the local time zone for the conversion."
+  [date]
+  (let [instant (jt/instant date) ; Convert java.util.Date if needed.
+        instant-with-zone (.atZone instant (jt/zone-id "UTC"))]
+    (jt/format formatter instant-with-zone)))
+
 (defn strs->vals
   "Attempts to convert a seq of 5 strings to vals that can be converted into a
   person.
   Returns a Failure object if unsuccessful."
   [ss]
   (f/try* (conj (vec (drop-last ss))
-                (ctf/parse formatter (last ss)))))
+                ;; Add time zone to our date string so that it can be converted to an #inst
+                (as-> (last ss) d
+                  (jt/local-date formatter d)
+                  (.atStartOfDay d)
+                  (.atZone d (jt/zone-id "UTC"))
+                  (jt/java-date d)))))
 
 (defn vals->person
   "Given a vector of values, creats a map merging those values with the person
@@ -67,8 +79,7 @@
   (let [first4 (join d [last-name first-name gender fav-color])
         ;; TODO: Write a generator to produce org.joda.time.ReadableInstant
         ;;  in ::dob so that this coercion isn't necessary for s/exercise-fn
-        coerced-dob (if (= java.util.Date (type dob)) (ctc/from-date dob) dob)
-        dob-str (ctf/unparse formatter coerced-dob)]
+        dob-str (instant->date-str dob)]
     (join d [first4 dob-str])))
 
 ;;;============================================================================
@@ -85,7 +96,7 @@
 
 (s/def ::date
   (s/with-gen #(instance? java.util.Date %)
-    (fn [] (gen/fmap #(-> % ctc/to-date)
+    (fn [] (gen/fmap #(-> % jt/java-date)
                      (s/gen (s/int-in begin-date end-date))))))
 
 ;;; TODO: Add some generators
@@ -122,7 +133,8 @@
   :ret (s/or ::maybeperson string?
              :error f/failed?)
   ;; Verify that we can turn the ret val back into the original ::person
-  :fn (fn [r] (= (str->person (second (:ret r))) (-> r :args :p))))
+  :fn (fn [r] (= (str->person (second (:ret r)))
+                 (-> r :args :p))))
 
 (comment
   (expound/explain-result (st/check-fn sorted.person/person->str 'sorted.person/person->str))

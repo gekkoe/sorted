@@ -2,7 +2,6 @@
   "Userspace functions you can run by default in your local REPL."
   (:require
    [sorted.config :refer [env]]
-   [clj-time.format :as ctf]
    [clojure.pprint]
    [clojure.spec.alpha :as s]
    [clojure.spec.gen.alpha :as gen]
