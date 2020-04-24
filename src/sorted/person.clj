@@ -54,7 +54,7 @@
                 person
                 (f/fail "Error in str->person: Could not parse `%s`\n%s"
                         s
-                        (.getMessage person))))
+                        (f/message person))))
 
 ;;;============================================================================
 ;;;                              S P E C S
