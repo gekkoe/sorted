@@ -37,18 +37,23 @@
         instant-with-zone (.atZone instant (jt/zone-id "UTC"))]
     (jt/format formatter instant-with-zone)))
 
+(defn str->java-date
+  "Converts a date sting in the format of p/formatter to a java.util.Date
+  corresponding to the start of that day in UTC time."
+  [s]
+  (as-> s date
+    (jt/local-date formatter date)
+    (.atStartOfDay date)
+    (.atZone date (jt/zone-id "UTC"))
+    (jt/java-date date)))
+
 (defn strs->vals
   "Attempts to convert a seq of 5 strings to vals that can be converted into a
   person.
   Returns a Failure object if unsuccessful."
   [ss]
   (f/try* (conj (vec (drop-last ss))
-                ;; Add time zone to our date string so that it can be converted to an #inst
-                (as-> (last ss) d
-                  (jt/local-date formatter d)
-                  (.atStartOfDay d)
-                  (.atZone d (jt/zone-id "UTC"))
-                  (jt/java-date d)))))
+                (str->java-date (last ss)))))
 
 (defn vals->person
   "Given a vector of values, creats a map merging those values with the person
