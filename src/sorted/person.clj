@@ -30,7 +30,7 @@
         :else (split-trim s #"\s+")))
 
 (defn instant->date-str
-  "Convert a java-time or java.util.Date instant to a local date, truncating any
+  "Converts a java-time or java.util.Date instant to a local date, truncating any
   time information it may contain. Uses the local time zone for the conversion."
   [date]
   (let [instant (jt/instant date) ; Convert java.util.Date if needed.

@@ -17,7 +17,7 @@ familiar with or that cover technologies that I discussed in a prior interview w
 customer and would like to incorporate here to learn more about them.
 * The following will be used for this project:
   - cheshire - A JSON library that is generally more performant than data.json.
-  - clj-time - Clojure wrapper for the popular Joda Time library.
+  - clojure.java-time - A Java 8+ Date-Time API wrapper library.
   - clojure.spec - A data specification library that I'd like to explore more here.
   - clojure.spec.gen - Generative testing for specs.
   - clojure.spec.test - Testing library for specs.
