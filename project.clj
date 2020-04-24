@@ -3,6 +3,7 @@
 
   :dependencies [[cheshire "5.10.0"]
                  [clj-time "0.15.2"]
+                 [clojure.java-time "0.3.2"]
                  [compojure "1.6.1"]
                  [cprop "0.1.16"]
                  [expound "0.8.4"]
