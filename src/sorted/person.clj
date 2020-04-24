@@ -1,8 +1,13 @@
 (ns sorted.person
   (:require [clojure.spec.alpha :as s]
-            [clojure.string :refer [split trim]]
+            [clojure.spec.gen.alpha :as gen]
+            [clojure.string :refer [split trim join blank?]]
             [clj-time.format :as ctf]
+            [clj-time.coerce :as ctc]
             [failjure.core :as f]))
+
+;; DateTime formatter for clj-time operations
+(def formatter (ctf/formatter "MM/dd/yyyy"))
 
 (defn no-delims?
   "Searches a string for any instance of the delimiters space, comma, or pipe.
@@ -30,9 +35,8 @@
   person.
   Returns a Failure object if unsuccessful."
   [ss]
-  (let [formatter (ctf/formatter "MM/dd/yyyy")]
-    (f/try* (conj (vec (drop-last ss))
-                  (ctf/parse formatter (last ss))))))
+  (f/try* (conj (vec (drop-last ss))
+                (ctf/parse formatter (last ss)))))
 
 (defn vals->person
   "Given a vector of values, creats a map merging those values with the person
@@ -56,21 +60,41 @@
                         s
                         (f/message person))))
 
+(defn person->str
+  "Expects a map that conforms to :sorted.person/person.
+  Returns a string representation of those values delimitted by d."
+  [{:keys [::last-name ::first-name ::gender ::fav-color ::dob]} d]
+  (let [first4 (join d [last-name first-name gender fav-color])
+        ;; TODO: Write a generator to produce org.joda.time.ReadableInstant
+        ;;  in ::dob so that this coercion isn't necessary for s/exercise-fn
+        coerced-dob (if (= java.util.Date (type dob)) (ctc/from-date dob) dob)
+        dob-str (ctf/unparse formatter coerced-dob)]
+    (join d [first4 dob-str])))
+
 ;;;============================================================================
 ;;;                              S P E C S
 ;;;============================================================================
 
 ;; The following spec deliberately allows invalid strings for testing purposes.
 ;; Validation will occur further through the process of conversion to a person.
-(s/def ::maybeperson (s/and string?))
+(s/def ::maybeperson string?)
+
+;; Arbitrary long ints to represent some random dates
+(def begin-date 500000000000)
+(def end-date 5000000000000)
+
+(s/def ::date
+  (s/with-gen #(instance? java.util.Date %)
+    (fn [] (gen/fmap #(-> % ctc/to-date)
+                     (s/gen (s/int-in begin-date end-date))))))
 
 ;;; TODO: Add some generators
-(s/def ::no-delim-str (s/and string? no-delims?))
+(s/def ::no-delim-str (s/and string? (complement blank?) no-delims?))
 (s/def ::last-name ::no-delim-str)
 (s/def ::first-name ::no-delim-str)
 (s/def ::gender ::no-delim-str)
 (s/def ::fav-color ::no-delim-str)
-(s/def ::dob inst?)
+(s/def ::dob ::date)
 
 (s/def ::person (s/keys
                  :req [::first-name ::last-name ::gender ::fav-color ::dob]))
@@ -89,6 +113,17 @@
 
 (s/fdef str->person
   :args (s/cat :s string?)
-  :ret (s/or ::person f/failed?)
+  :ret (s/alt ::person f/failed?)
   :fn (s/alt ::person (s/and no-delims? #(s/valid? ::person %))
              :message f/failed?))
+
+(s/fdef person->str
+  :args (s/cat :p ::person :d #{" " "," "|"})
+  :ret (s/or ::maybeperson string?
+             :error f/failed?)
+  ;; Verify that we can turn the ret val back into the original ::person
+  :fn (fn [r] (= (str->person (second (:ret r))) (-> r :args :p))))
+
+(comment
+  (expound/explain-result (st/check-fn sorted.person/person->str 'sorted.person/person->str))
+  )
