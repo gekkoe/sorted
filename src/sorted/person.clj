@@ -10,7 +10,7 @@
 ;;;============================================================================
 
 ;; Regex that will find pipe, space, or comma
-(def delims #"\|| |,")
+(def delims #"\||,| ")
 
 (def formatter (jt/formatter "MM/dd/yyyy"))
 
