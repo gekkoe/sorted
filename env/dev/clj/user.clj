@@ -9,26 +9,20 @@
    [clojure.java.classpath :refer [classpath]]
    [expound.alpha :as expound]
    [failjure.core :as f]
+   [java-time :as jt]
    #_[mount.core :as mount]
    [sorted.core :refer :all]
    [sorted.person :as p]
    [sorted.fileio :as file]))
 
+;; KLUDGE: For some reason this can't be found on the classpath if I just
+;;   include it in the ns statment above. It's convenient to have it aliased
+;;   for st/check calls though.
+(alias 'stc 'clojure.spec.test.check)
+
 (alter-var-root #'s/*explain-out* (constantly expound/printer))
 
 (add-tap (bound-fn* clojure.pprint/pprint))
-
-;; Some reusable vars for use during development.
-(def john "Doe John Male Blue 1/1/1943")
-(def jane "Doe, Jane, Female, Green,     12/1/2001")
-(def june "Doe| June| Female| Red   | 2/1/1983")
-(def jim "Doe| Jim|Male||         11/21/2014")
-
-;; Some malformed person string
-(def bad1 "Doe| Jack|Male| Orange |111/21/2014")
-(def bad2 "Doe| Jenny|Female| Pink |")
-(def bad3 "_,|| |,|")
-(def bad4 "")
 
 #_(defn start
   "Starts application.
