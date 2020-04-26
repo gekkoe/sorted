@@ -24,6 +24,12 @@
 
 (add-tap (bound-fn* clojure.pprint/pprint))
 
+(defn ex-check
+  ([spec]
+   (expound/explain-results (st/check spec)))
+  ([spec num-tests]
+   (expound/explain-results (st/check spec {:clojure.spec.test.check/opts {:num-tests num-tests}}))))
+
 #_(defn start
   "Starts application.
   You'll usually want to run this on startup."
