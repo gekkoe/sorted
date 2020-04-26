@@ -10,6 +10,8 @@
 ;;;============================================================================
 
 ;; Regex that will find pipe, space, or comma
+;; NOTE: If these change, it'll be necessary to update doc strings throughout
+;; this file.
 (def delims #"\||,| ")
 
 (def formatter (jt/formatter "MM/dd/yyyy"))
@@ -19,9 +21,10 @@
   the formate MM/dd/yyyy.
   Returns a Failure object if unsuccessful."
   [d]
-  (if (s/valid? ::date d)
-    (format "%02d/%02d/%04d" (::month d) (::day d) (::year d))
-    (f/fail "Error in date->str. Passed an invalid date. `%s`" d)))
+  (let [date (format "%02d/%02d/%04d" (::month d) (::day d) (::year d))]
+    (if (= (jt/format formatter (jt/local-date formatter date)) date)
+      date
+      (f/fail "Error in date->str. Passed an invalid date. `%s`\n" d))))
 
 (defn epoch->str
   "Expects a number representing days from the epoch date (1/1/1970) and
@@ -47,18 +50,24 @@
 
 (defn split-on-delims
   "Attempts to split a string into a vector of strings. Attempts to use pipe,
-  comma, or whitespace as delimiters, in that order."
+  comma, or whitespace as delimiters, in that order.
+  Returns a Failure object if unsuccessful."
   [s]
-  (cond (.contains s "|") (split-trim s #"\|")
-        (.contains s ",") (split-trim s #",")
-        :else (split-trim s #" "))) ; TODO: should this be \s+ or...?
+  (f/if-let-ok? [result (f/try*
+                         (cond (re-find #"\|" s) (split-trim s #"\|")
+                               (re-find #"," s) (split-trim s #",")
+                               :else (split-trim s #" ")))]
+                result
+                (f/fail "Error in split-on-delims: Could not parse `%s`\n%s"
+                        s
+                        (f/message result))))
 
 (defn str->date
   "Expects a string date formatted as MM/dd/yyyy and converts it to a map
   conforming to sorted.person/date.
   Returns a Failure object if unsuccessful."
   [s]
-  (if (s/valid? ::datestr s)
+  (if (s/valid? ::date-str s)
     (as-> s d
       (split d #"/")
       (map #(Integer. %) d)
@@ -70,8 +79,11 @@
   person.
   Returns a Failure object if unsuccessful."
   [ss]
-  (f/try* (conj (vec (drop-last ss))
-                (str->date (last ss)))))
+  (f/if-let-ok? [date (str->date (last ss))]
+                (conj (vec (drop-last ss)) date)
+                (f/fail "Error in str->vals: Could not parse `%s`\n%s"
+                        ss
+                        (f/message date))))
 
 (defn vals->person
   "Given a vector of values, creats a map merging those values with the person
@@ -102,10 +114,13 @@
 (defn person->str
   "Expects a map that conforms to :sorted.person/person.
   Returns a string representation of those values delimited by delim."
-  [{:keys [::last-name ::first-name ::gender ::fav-color ::dob]} delim]
-  (let [first4 (join delim [last-name first-name gender fav-color])
-        dob-str (date->str dob)]
-    (join delim [first4 dob-str])))
+  [{::keys [last-name first-name gender fav-color dob] :as person} delim]
+  (let [first4 (join delim [last-name first-name gender fav-color])]
+    (f/if-let-ok? [dob-str (date->str dob)]
+                  (join delim [first4 dob-str])
+                  (f/fail "Error in person->str: Could not convert `%s`\n%s"
+                          person
+                          (f/message dob-str)))))
 
 ;;;============================================================================
 ;;;                              S P E C S
@@ -123,7 +138,7 @@
 ;; Generate strings of dates in a desired range for generative tests.
 (def min-day -25567) ; 01/01/1900
 (def max-day  47845) ; 12/30/2100
-(s/def ::datestr
+(s/def ::date-str
   (s/with-gen #(f/ok? (f/try* (jt/local-date formatter %)))
     #(gen/fmap epoch->str (gen/choose min-day max-day))))
 
@@ -152,15 +167,32 @@
 (def ws-delims     #".*(\s+).*\s+.*\s+.*\s+\d+/\d+/\d+\s*$")
 
 (s/def ::person-str
-  (s/with-gen #(or (re-matches non-ws-delims %) (re-matches ws-delims %))
+  (s/with-gen (s/and string?
+                     #(or (re-matches non-ws-delims %)
+                          (re-matches ws-delims %)))
     #(gen/fmap (fn [[last first gender color dob delim]]
                  (join delim [last first gender color (epoch->str dob)]))
-               (gen/tuple non-delim                                  ; Last
-                          non-delim                                  ; First
-                          non-delim                                  ; Gender
-                          non-delim                                  ; Color
-                          (gen/choose min-day max-day)               ; DoB
-                          (gen/elements [" " "|" ","])))))           ; Delim
+               (gen/tuple non-delim                               ; Last
+                          non-delim                               ; First
+                          non-delim                               ; Gender
+                          non-delim                               ; Color
+                          (gen/choose min-day max-day)            ; DoB
+                          (gen/elements [" " "|" ","])))))        ; Delim
+
+(s/fdef str->person
+  :args (s/cat :s ::person-str)
+  :ret  (s/or :success ::person
+              :failure f/failed?))
+
+(s/fdef person->str
+  :args (s/cat :p ::person :d ::delim)
+  :ret  (s/or :success ::person-str
+              :failure f/failed?)
+  ;; Verify that we can turn the ret val back into the original ::person
+  :fn #(let [return (-> % :ret second)]
+         (if (f/ok? return)
+           (= (str->person return) (-> % :args :p)))
+         true)) ; f/failed? so just verify that a failure was thrown.
 
 (s/fdef no-delims?
   :args (s/cat :s ::maybe-person-str)
@@ -174,18 +206,18 @@
                             ;; At least one delim found in original string.
                             (fn [result] (some #(found-delim? result %) ds))))))
 
-(s/fdef str->person
-  :args (s/cat :s ::person-str)
-  :ret  (s/or :success ::person
-              :failure f/failed?))
-
-(s/fdef person->str
-  :args (s/cat :p ::person :d ::delim)
-  :ret  (s/or :success ::person-str
-              :failure f/failed?)
-  ;; Verify that we can turn the ret val back into the original ::person
-  :fn (fn [r] (= (str->person (-> r :ret second))
-                 (-> r :args :p))))
+(s/fdef date->str
+  :args (s/cat :d ::date)
+  :ret (s/or :success ::date-str
+             :failure f/failed?)
+  :fn #(let [return (-> % :ret second)]
+         (if (f/ok? return)
+           (let [d (-> % :args :d)
+                 date (jt/local-date formatter return)]
+             (and (= (jt/format "yyyy" date) (format "%04d" (::year d)))
+                  (= (jt/format "MM" date) (format "%02d" (::month d)))
+                  (= (jt/format "dd" date) (format "%02d" (::day d)))))
+           true))) ; f/failed? so just verify that a failure was thrown.
 
 (comment
   (expound/explain-results (st/check 'sorted.person/person->str))
