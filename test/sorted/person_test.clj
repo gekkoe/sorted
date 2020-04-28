@@ -10,7 +10,7 @@
                       ::p/first-name "John"
                       ::p/gender "Male"
                       ::p/fav-color "Blue"
-                      ::p/dob (p/str->java-date "01/22/1972")}
+                      ::p/dob (jt/local-date "MM/dd/yyyy" "01/22/1972")}
         invalid-person {:x 3 :y 9}]
     (testing "Checking if a person conforms to spec"
       (is (s/valid? ::p/person valid-person)))
