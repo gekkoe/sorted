@@ -24,11 +24,37 @@
 
 (add-tap (bound-fn* clojure.pprint/pprint))
 
-(defn ex-check
-  ([spec]
-   (expound/explain-results (st/check spec)))
+(defn check
+  ([spec] (check spec 1000))
   ([spec num-tests]
-   (expound/explain-results (st/check spec {:clojure.spec.test.check/opts {:num-tests num-tests}}))))
+   (st/check spec {:clojure.spec.test.check/opts {:num-tests num-tests}})))
+
+(defn ex-check
+  ([spec] (ex-check spec 1000))
+  ([spec num-tests]
+   (expound/explain-results (check spec num-tests))))
+
+(defn check-ns
+  ([] (check-ns 'sorted.person 1000))
+  ([my-ns] (check-ns my-ns 1000))
+  ([my-ns num-tests]
+   (map first (remove empty? (map #(check % num-tests)
+                                  (st/enumerate-namespace my-ns))))))
+
+(defn ex-check-ns
+  ([] (ex-check-ns 'sorted.person 1000))
+  ([my-ns] (ex-check-ns my-ns 1000))
+  ([my-ns num-tests]
+   (expound/explain-results (check-ns my-ns num-tests))))
+
+(defn sample
+  ([spec] (sample spec 10))
+  ([spec n]
+   (gen/sample (s/gen spec) n)))
+
+(defn one-of
+  [spec]
+  (first (gen/sample (s/gen spec) 1)))
 
 #_(defn start
   "Starts application.
