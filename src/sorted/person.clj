@@ -99,10 +99,17 @@
 ;;;                              S P E C S
 ;;;============================================================================
 
-(s/def ::delim-str (s/with-gen string? #(s/gen #{"|" "," " "})))
+(def delim-str-set #{"|" "," " "})
+(s/def ::delim-str (s/with-gen (s/and string? delim-str-set) #(s/gen delim-str-set)))
+;; java.util.regex.Pattern objects don't eval as = unless they are the same object.
+;; so we convert them to strings for comparison.
+(def delim-regex-set #{#"\|" #"," #" "})
+(def delim-regex-str-set (into #{} (map str delim-regex-set)))
 (s/def ::delim-regex (s/with-gen
-                       #(instance? java.util.regex.Pattern %)
-                       #(s/gen #{#"\|" #"," #" "})))
+                       (s/and
+                        #(instance? java.util.regex.Pattern %)
+                        #(delim-regex-str-set (str %)))
+                       #(s/gen delim-regex-set)))
 
 #_(def min-day (.. java.time.LocalDate MIN toEpochDay))
 #_(def max-day (.. java.time.LocalDate MAX toEpochDay))
