@@ -11,8 +11,8 @@
 
 ;; NOTE: If these change, it'll be necessary to update doc strings throughout
 ;; this file.
-(def delims #"\||,| ")                       ; Find pipe, comma, or space
-(def line-breaks #"\n|\r")                   ; Find line breaks
+(def delims #"[|, ]")                       ; Find pipe, comma, or space
+(def line-breaks #"[\n\r]")                 ; Find line breaks
 (def formatter (jt/formatter "MM/dd/yyyy"))
 
 (defn no-delims?
@@ -100,9 +100,10 @@
 ;;;============================================================================
 
 (def delim-str-set #{"|" "," " "})
-(s/def ::delim-str (s/with-gen (s/and string? delim-str-set) #(s/gen delim-str-set)))
-;; java.util.regex.Pattern objects don't eval as = unless they are the same object.
-;; so we convert them to strings for comparison.
+(s/def ::delim-str
+  (s/with-gen (s/and string? delim-str-set) #(s/gen delim-str-set)))
+;; java.util.regex.Pattern objects don't eval as = unless they are the same
+;; object. so we convert them to strings for comparison.
 (def delim-regex-set #{#"\|" #"," #" "})
 (def delim-regex-str-set (into #{} (map str delim-regex-set)))
 (s/def ::delim-regex (s/with-gen
@@ -134,9 +135,12 @@
 (s/def ::gender ::no-delim-str)
 (s/def ::fav-color ::no-delim-str)
 (s/def ::dob ::date)
-(s/def ::person (s/keys :req [::first-name ::last-name ::gender ::fav-color ::dob]))
-(s/def ::person-strs (s/tuple ::first-name ::last-name ::gender ::fav-color ::date-str))
-(s/def ::person-vals (s/tuple ::first-name ::last-name ::gender ::fav-color ::dob))
+(s/def ::person
+  (s/keys :req [::first-name ::last-name ::gender ::fav-color ::dob]))
+(s/def ::person-strs
+  (s/tuple ::first-name ::last-name ::gender ::fav-color ::date-str))
+(s/def ::person-vals
+  (s/tuple ::first-name ::last-name ::gender ::fav-color ::dob))
 
 ;; NOTE: This generator is rather specific, so it has a lowered likelihood of
 ;; working. So it requires an override to max-tries. Without it, test.check will
@@ -145,13 +149,16 @@
 ;; Also worth noting, line breaks throw off the regex matchers, but it seems
 ;; reasonable, since this is line-by-line input to exclude this case from
 ;; the generative tests.
-(def non-delim-gen (gen/such-that #(and (no-delims? %) (not (re-find line-breaks %)))
-                              (gen/string) 100))
+(def non-delim-gen (gen/such-that #(and (no-delims? %)
+                                        (not (re-find line-breaks %)))
+                                  (gen/string) 100))
 
 ;; Some regex matchers that will determine if a string appears to be a
 ;; well-formed delimited string that could represent a ::person
-(def non-ws-delims #".*?([\|,]).*?\1.*?\1.*?\1\s*\d{1,2}/\d{1,2}/[\+\-]*\d{1,9}\s*$")
-(def ws-delims     #".*(\s+).*\s+.*\s+.*\s+\d{1,2}/\d{1,2}/[\+\-]*\d{1,9}\s*$")
+(def non-ws-delims
+  #".*?([\|,]).*?\1.*?\1.*?\1\s*\d{1,2}/\d{1,2}/[\+\-]*\d{1,9}\s*$")
+(def ws-delims
+  #".*(\s+).*\s+.*\s+.*\s+\d{1,2}/\d{1,2}/[\+\-]*\d{1,9}\s*$")
 
 (s/def ::person-str
   (s/with-gen (s/and string?
@@ -159,13 +166,17 @@
                      #(or (re-matches non-ws-delims %)
                           (re-matches ws-delims %)))
     #(gen/fmap (fn [[last first gender color dob delim]]
-                 (join delim [last first gender color (jt/format formatter dob)]))
+                 (join delim [last
+                              first
+                              gender
+                              color
+                              (jt/format formatter dob)]))
                (gen/tuple non-delim-gen                           ; Last
                           non-delim-gen                           ; First
                           non-delim-gen                           ; Gender
                           non-delim-gen                           ; Color
                           date-gen                                ; DoB
-                          (gen/elements ["|" "," " "])))))        ; Delim
+                          (gen/elements (vec delim-str-set))))))        ; Delim
 
 (s/fdef str->person
   :args (s/cat :s ::person-str)
@@ -230,4 +241,3 @@
                                      {:clojure.spec.test.check/opts
                                       {:num-tests 1000}}))
   )
-;; => nil
