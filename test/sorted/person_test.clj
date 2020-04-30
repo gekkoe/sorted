@@ -5,7 +5,8 @@
             [clojure.spec.alpha :as s]
             [clojure.spec.gen.alpha :as g]
             [java-time :as jt]
-            [clojure.spec.gen.alpha :as gen]))
+            [clojure.spec.gen.alpha :as gen]
+            [failjure.core :as f]))
 
 (def num-samples 5000) ; Increase this to run slower but more exhaustive tests.
 (def samples #(h/gen-samples % num-samples))
@@ -53,3 +54,11 @@
 (deftest no-delim-str-test
   (testing "Generated strings do not contain pipes, commas, or spaces"
     (is (not-any? #(re-find p/delims %) (samples ::p/no-delim-str)))))
+
+(deftest no-delim-specs-test
+  (testing "Expected specs conform to :sorted.person/no-delim-str."
+    (let [verified? #(h/verified? % ::p/no-delim-str num-samples)]
+      (is (verified? ::p/last-name))
+      (is (verified? ::p/first-name))
+      (is (verified? ::p/gender))
+      (is (verified? ::p/fav-color)))))
