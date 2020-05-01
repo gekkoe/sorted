@@ -206,13 +206,16 @@
   :args (s/cat :s string?)
   :ret boolean?
   :fn (let [ds [#" " #"," #"\|"]
-            found-delim? (fn [result delim] (re-find delim (-> result :args :s)))]
+            found-delim? (fn [result delim]
+                           (re-find delim (-> result :args :s)))]
         (s/or :true  (s/and #(:ret %)
                             ;; No delims found in s.
-                            (fn [result] (not-any? #(found-delim? result %) ds)))
-              :false (s/and #(not (:ret %))
+                            (fn [result]
+                              (not-any? #(found-delim? result %) ds)))
+                :false (s/and #(not (:ret %))
                             ;; At least one delim found in s.
-                            (fn [result] (some #(found-delim? result %) ds))))))
+                              (fn [result]
+                                (some #(found-delim? result %) ds))))))
 
 (s/fdef split-trim
   :args (s/cat :s ::person-str :delim ::delim-regex)

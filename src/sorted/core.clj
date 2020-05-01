@@ -2,7 +2,8 @@
   (:require [clojure.tools.cli :refer [parse-opts]]
             [clojure.string :refer [join]]
             [sorted.person :as p]
-            [sorted.fileio :as file])
+            [sorted.fileio :as file]
+            [failjure.core :as f])
   (:gen-class))
 
 (def usage
@@ -28,4 +29,7 @@
       (or (get-in opts [:options :help])
           (empty? file-names)) (println (str usage (:summary opts)))
       (:errors opts) (println (join "\n" (:errors opts)))
-      :else (map (partial map p/str->person) (map file/text-read file-names)))))
+      :else (->> (map file/text-read file-names)
+                 (map (partial map p/str->person))
+                 flatten
+                 (remove f/failed?)))))
