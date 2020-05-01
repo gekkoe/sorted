@@ -176,7 +176,7 @@
                           non-delim-gen                           ; Gender
                           non-delim-gen                           ; Color
                           date-gen                                ; DoB
-                          (gen/elements (vec delim-str-set))))))        ; Delim
+                          (gen/elements (vec delim-str-set))))))  ; Delim
 
 (s/fdef str->person
   :args (s/cat :s ::person-str)
@@ -189,7 +189,7 @@
              values (split-on-delims s)]
          (or (f/failed? ret)
              (= values (f/ok-> ret
-                               (person->str "|") ; Any valid delim is fine here.
+                               (person->str (rand-nth (vec delim-str-set)))
                                split-on-delims)))))
 
 (s/fdef person->str
