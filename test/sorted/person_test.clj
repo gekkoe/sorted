@@ -53,7 +53,7 @@
 
 (deftest no-delim-str-test
   (testing "Generated strings do not contain pipes, commas, or spaces"
-    (is (not-any? #(re-find p/delims %) (samples ::p/no-delim-str)))))
+    (is (not-any? #(re-find p/delim-regex %) (samples ::p/no-delim-str)))))
 
 (deftest no-delim-specs-test
   (testing "Expected specs conform to :sorted.person/no-delim-str."

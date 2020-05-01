@@ -3,7 +3,8 @@
             [clojure.spec.gen.alpha :as gen]
             [clojure.string :refer [split trim join]]
             [failjure.core :as f]
-            [java-time :as jt]))
+            [java-time :as jt]
+            [clojure.spec.test.alpha :as st]))
 
 ;;;============================================================================
 ;;;                          H E L P E R S
@@ -11,15 +12,31 @@
 
 ;; NOTE: If these change, it'll be necessary to update doc strings throughout
 ;; this file.
-(def delims #"[|, ]")                       ; Find pipe, comma, or space
-(def line-breaks #"[\n\r]")                 ; Find line breaks
+(def line-breaks #"[\n\r]")
 (def formatter (jt/formatter "MM/dd/yyyy"))
+(def delim-map {"|" #"\|"
+                 "," #","
+                 " " #" "})
+(def delim-str-set (into #{} (keys delim-map)))
+(def delim-regex (re-pattern (str "[" (join (keys delim-map)) "]")))
+(def delim-regex-set (into #{} (vals delim-map)))
+(def delim-regex-str-set (into #{} (map str delim-regex-set)))
+
+;; Some regex matchers that will determine if a string appears to be a
+;; well-formed delimited string that could represent a ::person
+(def non-ws-delims
+  #".*?([|,]).*?\1.*?\1.*?\1\s*\d{1,2}/\d{1,2}/[\+\-]*\d{1,9}\s*$")
+(def ws-delims
+  #".*(\s+).*\s+.*\s+.*\s+\d{1,2}/\d{1,2}/[\+\-]*\d{1,9}\s*$")
 
 (defn no-delims?
   "Searches a string for any instance of the delimiters pipe, comma, or space.
-  Returns true if none are found or false if one or more is found."
+  Returns true if none are found, or if an invalid value is passed as s. Returns
+  false if one or more is found."
   [s]
-  (not (re-find delims s)))
+  (if (string? s)
+    (not (re-find delim-regex s))
+    true))
 
 (defn split-trim
   "Splits a string using a delimiter and trims any extra whitespace from the
@@ -34,17 +51,22 @@
             s delim)))
 
 (defn split-on-delims
-  "Attempts to split a string into a vector of strings. Attempts to use pipe,
-  comma, or space as delimiters, in that order.
+  "Attempts to split the string s into a vector of strings. If delim is passed,
+  will attempt to use it as the delim for splitting. If delim is either not
+  passed, or is invalid, attempts to use pipe, comma, or space as delims, in
+  that order.
   Returns a Failure object if unsuccessful."
-  [s]
-  (f/if-let-ok? [result (f/try*
-                         (cond (re-find #"\|" s) (split-trim s #"\|")
-                               (re-find #"," s) (split-trim s #",")
-                               :else (split-trim s #" ")))]
-                (vec result)
-                (f/fail "Error in split-on-delims: Could not parse `%s`\n%s"
-                        s (f/message result))))
+  ([s] (split-on-delims s nil))
+  ([s delim]
+   (f/if-let-ok? [result (f/try*
+                          (if-let [d-regex (delim-map delim)]
+                            (split-trim s d-regex)
+                            (cond (re-find #"\|" s) (split-trim s #"\|")
+                                  (re-find #"," s)  (split-trim s #",")
+                                  :else             (split-trim s #" "))))]
+                 (vec result)
+                 (f/fail "Error in split-on-delims: Could not parse `%s`\n%s"
+                         s (f/message result)))))
 
 (defn strs->vals
   "Attempts to convert a seq of 5 strings to vals that can be converted into a
@@ -73,16 +95,20 @@
   "Expects a string containing a delimited list of fields in the order
   LastName FirstName Gender FavoriteColor DateOfBirth
   where valid delims are pipe, comma, or space and date format is MM/dd/yyyy.
+  If delim is provided, will attempt to parse using that delim, but if it
+  fails will attemp to use pipe, comma, or space, in that order.
   Returns a map that conforms to the :sorted.person/person spec or a Failure
   object."
-  [s]
-  (f/if-let-ok? [person (f/ok-> s
-                                split-on-delims
-                                strs->vals
-                                vals->person)]
-                person
-                (f/fail "Error in str->person: Could not parse `%s`\n%s"
-                        s (f/message person))))
+  ([s]
+   (str->person s nil))
+  ([s delim]
+   (f/if-let-ok? [person (f/ok-> s
+                                 (split-on-delims delim)
+                                 strs->vals
+                                 vals->person)]
+                 person
+                 (f/fail "Error in str->person: Could not parse `%s`\n%s"
+                         s (f/message person)))))
 
 (defn person->str
   "Expects a map that conforms to :sorted.person/person.
@@ -99,18 +125,19 @@
 ;;;                              S P E C S
 ;;;============================================================================
 
-(def delim-str-set #{"|" "," " "})
 (s/def ::delim-str
-  (s/with-gen (s/and string? delim-str-set) #(s/gen delim-str-set)))
+  (s/with-gen
+    (s/and string? delim-str-set)
+    #(gen/one-of [(s/gen string?) (s/gen delim-str-set)])))
+
 ;; java.util.regex.Pattern objects don't eval as = unless they are the same
 ;; object. so we convert them to strings for comparison.
-(def delim-regex-set #{#"\|" #"," #" "})
-(def delim-regex-str-set (into #{} (map str delim-regex-set)))
 (s/def ::delim-regex (s/with-gen
                        (s/and
                         #(instance? java.util.regex.Pattern %)
                         #(delim-regex-str-set (str %)))
-                       #(s/gen delim-regex-set)))
+                       #(gen/one-of [(s/gen delim-regex-set)
+                                     (s/gen #{#"bad" #"vals" #"here"})])))
 
 #_(def min-day (.. java.time.LocalDate MIN toEpochDay))
 #_(def max-day (.. java.time.LocalDate MAX toEpochDay))
@@ -120,14 +147,12 @@
 (def date-gen (gen/fmap #(. java.time.LocalDate ofEpochDay %) epoch-day-gen))
 (def date-str-gen (gen/fmap #(jt/format formatter %) date-gen))
 
-(s/def ::date (s/with-gen
-                #(instance? java.time.LocalDate %)
-                (constantly date-gen)))
+(s/def ::date (s/with-gen #(instance? java.time.LocalDate %)
+                          (constantly date-gen)))
 
 (s/def ::date-str
-  (s/with-gen
-    (s/and string? #(f/ok? (f/try* (jt/local-date formatter %))))
-    (constantly date-str-gen)))
+  (s/with-gen (s/and string? #(f/ok? (f/try* (jt/local-date formatter %))))
+              (constantly date-str-gen)))
 
 (s/def ::no-delim-str (s/and string? no-delims?))
 (s/def ::last-name ::no-delim-str)
@@ -147,46 +172,43 @@
 ;; only attempt it 10 times, and will generally fail on string or string-ascii.
 ;; It does work for string-alphanumeric though.
 ;; Also worth noting, line breaks throw off the regex matchers, but it seems
-;; reasonable, since this is line-by-line input to exclude this case from
+;; reasonable, since this is line-by-line input, to exclude this case from
 ;; the generative tests.
 (def non-delim-gen (gen/such-that #(and (no-delims? %)
                                         (not (re-find line-breaks %)))
                                   (gen/string) 100))
-
-;; Some regex matchers that will determine if a string appears to be a
-;; well-formed delimited string that could represent a ::person
-(def non-ws-delims
-  #".*?([\|,]).*?\1.*?\1.*?\1\s*\d{1,2}/\d{1,2}/[\+\-]*\d{1,9}\s*$")
-(def ws-delims
-  #".*(\s+).*\s+.*\s+.*\s+\d{1,2}/\d{1,2}/[\+\-]*\d{1,9}\s*$")
 
 (s/def ::person-str
   (s/with-gen (s/and string?
                      #(not (re-find line-breaks %))
                      #(or (re-matches non-ws-delims %)
                           (re-matches ws-delims %)))
-    #(gen/fmap (fn [[last first gender color dob delim]]
-                 (join delim [last
-                              first
-                              gender
-                              color
-                              (jt/format formatter dob)]))
-               (gen/tuple non-delim-gen                           ; Last
-                          non-delim-gen                           ; First
-                          non-delim-gen                           ; Gender
-                          non-delim-gen                           ; Color
-                          date-gen                                ; DoB
-                          (gen/elements (vec delim-str-set))))))  ; Delim
+    #(gen/one-of [(s/gen any?)
+                  (gen/fmap
+                   (fn [[last first gender color dob delim]]
+                     (join delim [last
+                                  first
+                                  gender
+                                  color
+                                  (jt/format formatter dob)]))
+                   (gen/tuple non-delim-gen                             ; Last
+                              non-delim-gen                             ; first
+                              non-delim-gen                             ; gender
+                              non-delim-gen                             ; color
+                              date-gen                                  ; dob
+                              (gen/elements (vec delim-str-set))))])))  ; delim
 
 (s/fdef str->person
-  :args (s/cat :s ::person-str)
+  :args (s/or :unary (s/cat :s any?)
+              :binary (s/cat :s ::person-str :delim ::delim-str))
   :ret  (s/or :success ::person
               :failure f/failed?)
   ;; Verify that the person generatated has vals that correspond to those parsed
   ;; from the original string.
   :fn #(let [ret (-> % :ret second)
-             s (-> % :args :s)
-             values (split-on-delims s)]
+             s (-> % :args second :s)
+             delim (-> % :args second :delim)
+             values (split-on-delims s delim)]
          (or (f/failed? ret)
              (= values (f/ok-> ret
                                (person->str (rand-nth (vec delim-str-set)))
@@ -202,20 +224,23 @@
          (or (f/failed? ret)
              (= (str->person ret) p))))
 
+;; This spec may be a bit redundundant/silly. I mainly wrote it to learn about
+;; writing specs for predicates.
 (s/fdef no-delims?
-  :args (s/cat :s string?)
+  :args (s/cat :s any?)
   :ret boolean?
   :fn (let [ds delim-regex-set
-            found-delim? (fn [result delim]
-                           (re-find delim (-> result :args :s)))]
+            found? (fn [result delim]
+                     (f/if-let-ok?
+                      [f? (f/try* (re-find delim (-> result :args :s)))]
+                      f?
+                      false))]
         (s/or :true  (s/and #(:ret %)
                             ;; No delims found in s.
-                            (fn [result]
-                              (not-any? #(found-delim? result %) ds)))
-                :false (s/and #(not (:ret %))
+                            (fn [result] (not-any? #(found? result %) ds)))
+              :false (s/and #(not (:ret %))
                             ;; At least one delim found in s.
-                              (fn [result]
-                                (some #(found-delim? result %) ds))))))
+                            (fn [result] (some #(found? result %) ds))))))
 
 (s/fdef split-trim
   :args (s/cat :s ::person-str :delim ::delim-regex)
@@ -223,7 +248,9 @@
              :failure f/failed?))
 
 (s/fdef split-on-delims
-  :args (s/cat :s ::person-str)
+  :args (s/or :unary  (s/cat :s ::person-str)
+              :binary (s/cat :s ::person-str
+                             :delim ::delim-str))
   :ret (s/or :success ::person-strs
              :failure f/failed?))
 
