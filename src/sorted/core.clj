@@ -33,3 +33,8 @@
                  (map (partial map p/str->person))
                  flatten
                  (remove f/failed?)))))
+
+(comment
+  (map #(p/person->str % " ") (sort-by ::p/dob #(compare %2 %1)
+                                       (-main "env/dev/resources/space-delim")))
+  )
