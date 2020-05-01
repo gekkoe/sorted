@@ -205,7 +205,7 @@
 (s/fdef no-delims?
   :args (s/cat :s string?)
   :ret boolean?
-  :fn (let [ds [#" " #"," #"\|"]
+  :fn (let [ds delim-regex-set
             found-delim? (fn [result delim]
                            (re-find delim (-> result :args :s)))]
         (s/or :true  (s/and #(:ret %)
