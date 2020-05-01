@@ -22,7 +22,7 @@
       (testing "returns an error when passed an invaldid argument"
         (is (f/failed? returned))
         (testing "with the expected error message text"
-          (is (= error-msg (:message returned))))))))
+          (is (= error-msg (f/message returned))))))))
 
 (deftest text-read-test
   (testing "Reading a known file"
