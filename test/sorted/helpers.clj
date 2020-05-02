@@ -23,6 +23,14 @@
                 attempt
                 false))
 
+(defn contains-all?
+  "Given a map and one or more keys, returns true if m contains all ks.
+  Returns false if not, or if m is not a map."
+  [m & ks]
+  (if (map? m)
+    (every? #(contains? m %) ks)
+    false))
+
 (defn gen-samples
   "Given a spec, generates a collection of n random samples.
   Returns a Failure object if unsuccessful."
@@ -75,6 +83,10 @@
 (s/fdef checks?
   :args (s/cat :f ::sample-fn :spec ::sample-spec :n pos-int?)
   :ret (s/nilable boolean?))
+
+(s/fdef contains-all?
+  :args (s/cat :m map? :ks (s/* any?))
+  :ret boolean?)
 
 ;; NOTE: While the following specs do check out in every case I've tried, they
 ;;   starts taking an extremely long time to run when I attempt to run more than
