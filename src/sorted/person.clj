@@ -115,11 +115,14 @@
   Returns a string representation of those values delimited by delim."
   [{::keys [last-name first-name gender fav-color dob] :as person} delim]
   (let [first4 (join delim [last-name first-name gender fav-color])]
-    (f/if-let-ok? [dob-str (f/try* (jt/format formatter dob))]
-                  (join delim [first4 dob-str])
-                  (f/fail "Error in person->str: Could not convert `%s`\n%s"
-                          person
-                          (f/message dob-str)))))
+    (if (s/valid? ::person person)
+      (f/if-let-ok? [dob-str (f/try* (jt/format formatter dob))]
+                    (join delim [first4 dob-str])
+                    (f/fail "Error in person->str: Could not convert `%s`\n%s"
+                            person
+                            (f/message dob-str)))
+      (f/fail (str "Error in person->str: `%s` is not a valid "
+                   ":sorted.person/person.") person))))
 
 ;;;============================================================================
 ;;;                              S P E C S
