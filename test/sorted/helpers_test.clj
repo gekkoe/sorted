@@ -24,11 +24,11 @@
 
 (deftest contains-all?-test
   (testing "Returns true when passed a map and keys it contains"
-    (is (contains-all? {:a 1, " " "!", 4 2} :a " " 4)))
+    (is (h/contains-all? {:a 1, " " "!", 4 2} :a " " 4)))
   (testing "Returns false when passed a map and keys it doesn't contain"
-    (is (not (contains-all? {:a 1 :b 2 :c 3} :d))))
+    (is (not (h/contains-all? {:a 1 :b 2 :c 3} :d))))
   (testing "Returns false when m is not a map"
-    (is (not-any? #(apply contains-all?
+    (is (not-any? #(apply h/contains-all?
                           %
                           (random-sample 0.01 (h/gen-samples ::any num-tests)))
                   (h/gen-samples ::non-map num-tests)))))
