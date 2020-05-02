@@ -85,7 +85,8 @@
   [vs]
   (if (s/valid? ::person-vals vs)
     (zipmap [::last-name ::first-name ::gender ::fav-color ::dob] vs)
-    (f/fail "Error in vals->person: `%s` is not a valid :sorted.person/person-vals." vs)))
+    (f/fail (str "Error in vals->person: `%s` is not a valid "
+                 ":sorted.person/person-vals.") vs)))
 
 ;;;============================================================================
 ;;;                           P U B L I C
@@ -114,15 +115,15 @@
   "Expects a map that conforms to :sorted.person/person.
   Returns a string representation of those values delimited by delim."
   [{::keys [last-name first-name gender fav-color dob] :as person} delim]
-  (let [first4 (join delim [last-name first-name gender fav-color])]
-    (if (s/valid? ::person person)
+  (if (s/valid? ::person person)
+    (let [first4 (join delim [last-name first-name gender fav-color])]
       (f/if-let-ok? [dob-str (f/try* (jt/format formatter dob))]
                     (join delim [first4 dob-str])
                     (f/fail "Error in person->str: Could not convert `%s`\n%s"
                             person
-                            (f/message dob-str)))
-      (f/fail (str "Error in person->str: `%s` is not a valid "
-                   ":sorted.person/person.") person))))
+                            (f/message dob-str))))
+    (f/fail (str "Error in person->str: `%s` is not a valid "
+                 ":sorted.person/person.") person)))
 
 ;;;============================================================================
 ;;;                              S P E C S
@@ -171,7 +172,7 @@
   (s/tuple ::first-name ::last-name ::gender ::fav-color ::dob))
 
 ;; NOTE: This generator is rather specific, so it has a lowered likelihood of
-;; working. So it requires an override to max-tries. Without it, test.check will
+;; working. It requires an override to max-tries. Without it, test.check will
 ;; only attempt it 10 times, and will generally fail on string or string-ascii.
 ;; It does work for string-alphanumeric though.
 ;; Also worth noting, line breaks throw off the regex matchers, but it seems
@@ -226,7 +227,7 @@
          (or (f/failed? ret)
              (= (str->person ret) p))))
 
-;; This spec may be a bit redundundant/silly. I mainly wrote it to learn about
+;; This spec may be a bit redundant/silly. I mainly wrote it to learn about
 ;; writing specs for predicates.
 (s/fdef no-delims?
   :args (s/cat :s any?)
