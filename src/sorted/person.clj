@@ -183,20 +183,19 @@
                      #(not (re-find line-breaks %))
                      #(or (re-matches non-ws-delims %)
                           (re-matches ws-delims %)))
-    #(gen/one-of [(s/gen any?)
-                  (gen/fmap
-                   (fn [[last first gender color dob delim]]
-                     (join delim [last
-                                  first
-                                  gender
-                                  color
-                                  (jt/format formatter dob)]))
-                   (gen/tuple non-delim-gen                             ; Last
-                              non-delim-gen                             ; first
-                              non-delim-gen                             ; gender
-                              non-delim-gen                             ; color
-                              date-gen                                  ; dob
-                              (gen/elements (vec delim-str-set))))])))  ; delim
+              #(gen/fmap
+                (fn [[last first gender color dob delim]]
+                  (join delim [last
+                               first
+                               gender
+                               color
+                               (jt/format formatter dob)]))
+                (gen/tuple non-delim-gen                           ; Last
+                           non-delim-gen                           ; first
+                           non-delim-gen                           ; gender
+                           non-delim-gen                           ; color
+                           date-gen                                ; dob
+                           (gen/elements (vec delim-str-set))))))  ; delim
 
 (s/fdef str->person
   :args (s/or :unary (s/cat :s any?)
