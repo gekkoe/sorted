@@ -8,12 +8,16 @@
             [clojure.spec.gen.alpha :as gen]
             [failjure.core :as f]))
 
-(def num-samples 5000) ; Increase this to run slower but more exhaustive tests.
+(def num-samples 1000) ; Increase this to run slower but more exhaustive tests.
 (def samples #(h/gen-samples % num-samples))
+
+(def num-tests 100)    ; Number of times to check function specs.
 
 (def formatter "MM/dd/yyyy")
 (def min-date (jt/local-date formatter "01/01/0001"))
 (def max-date (jt/local-date formatter "12/31/9999"))
+
+(def num-person-fields 5)
 
 (deftest delim-str-test
   (let [expected? p/delim-str-set]
@@ -66,3 +70,58 @@
       (is (s/valid? ::p/person valid-person)))
     (testing "Checking if an invalid person conforms to spec"
       (is (not (s/valid? ::p/person invalid-person))))))
+
+(deftest person-strs-test
+  (let [samps (samples ::p/person-strs)]
+    (testing "Generated values are vectors"
+      (is (every? vector? samps))
+      (testing "of strings"
+        (is (every? #(every? string? %) samps)))
+      (testing "containing expected number of values"
+        (is (every? #(= (count %) num-person-fields) samps))))))
+
+(s/def ::person-vals-shape
+  (s/tuple string? string? string? string? #(instance? java.time.LocalDate %)))
+(deftest person-vals-test
+  (let [samps (samples ::p/person-vals)]
+    (testing "Generated values are vectors"
+      (is (every? vector? samps))
+      (testing "of string string string string LocalDate"
+        (is (every? #(s/valid? ::person-vals-shape %) samps))))))
+
+(deftest person-str-test
+  (let [samps (samples ::p/person-str)]
+    (testing "Generated values are strings"
+      (is (every? string? samps))
+      (testing "that do not contain line breaks or carriage returns"
+        (is (not-any? #(re-find p/line-breaks %) samps)))
+      (testing "that contains one of the expected delims"
+        (is (every? #(re-find p/delim-regex %) samps))))))
+
+(deftest str->person-test
+  (testing "Conforms to spec."
+    (is (h/checks? 'sorted.person/str->person num-tests))))
+
+(deftest person->str-test
+  (testing "Conforms to spec."
+    (is (h/checks? 'sorted.person/person->str num-tests))))
+
+(deftest no-delims?-test
+  (testing "Conforms to spec."
+    (is (h/checks? 'sorted.person/no-delims? num-tests))))
+
+(deftest split-trim-test
+  (testing "Conforms to spec."
+    (is (h/checks? 'sorted.person/split-trim num-tests))))
+
+(deftest split-on-delims-test
+  (testing "Conforms to spec."
+    (is (h/checks? 'sorted.person/split-on-delims num-tests))))
+
+(deftest strs->vals-test
+  (testing "Conforms to spec."
+    (is (h/checks? 'sorted.person/strs->vals num-tests))))
+
+(deftest vals->person-test
+  (testing "Conforms to spec."
+    (is (h/checks? 'sorted.person/vals->person num-tests))))
