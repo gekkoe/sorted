@@ -15,26 +15,14 @@
 (def min-date (jt/local-date formatter "01/01/0001"))
 (def max-date (jt/local-date formatter "12/31/9999"))
 
-(deftest person-test
-  (let [valid-person {::p/last-name "Doe"
-                      ::p/first-name "John"
-                      ::p/gender "Male"
-                      ::p/fav-color "Blue"
-                      ::p/dob (jt/local-date p/formatter "01/22/1972")}
-        invalid-person {:x 3 :y 9}]
-    (testing "Checking if a person conforms to spec"
-      (is (s/valid? ::p/person valid-person)))
-    (testing "Checking if an invalid person conforms to spec"
-      (is (not (s/valid? ::p/person invalid-person))))))
-
 (deftest delim-str-test
   (let [expected? p/delim-str-set]
-    (testing "Generated delims are pipes, commas, or spaces"
+    (testing "Generated strings contain expected delims"
       (is (every? expected? (samples ::p/delim-str))))))
 
 (deftest delim-regex-test
   (let [expected? p/delim-regex-str-set]
-    (testing "Generated delim regex patterns are pipes, commas, or spaces"
+    (testing "Generated delim regex patterns are expected delims"
       (is (every? expected? (map str (samples ::p/delim-regex)))))))
 
 (deftest date-test
@@ -52,7 +40,7 @@
       (is (every? expected? (samples ::p/date-str))))))
 
 (deftest no-delim-str-test
-  (testing "Generated strings do not contain pipes, commas, or spaces"
+  (testing "Generated strings do not contain delims"
     (is (not-any? #(re-find p/delim-regex %) (samples ::p/no-delim-str)))))
 
 (deftest no-delim-specs-test
@@ -62,3 +50,19 @@
       (is (verified? ::p/first-name))
       (is (verified? ::p/gender))
       (is (verified? ::p/fav-color)))))
+
+(deftest dob-test
+  (testing "Conforms to :sorted.person/date"
+    (is (h/verified? ::p/dob ::p/date num-samples))))
+
+(deftest person-test
+  (let [valid-person {::p/last-name "Doe"
+                      ::p/first-name "John"
+                      ::p/gender "Male"
+                      ::p/fav-color "Blue"
+                      ::p/dob (jt/local-date p/formatter "01/22/1972")}
+        invalid-person {:x 3 :y 9}]
+    (testing "Checking if a valid person conforms to spec"
+      (is (s/valid? ::p/person valid-person)))
+    (testing "Checking if an invalid person conforms to spec"
+      (is (not (s/valid? ::p/person invalid-person))))))
