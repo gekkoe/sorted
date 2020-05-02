@@ -18,9 +18,7 @@
             :clojure.spec.test.check/ret
             :pass?)))
   (testing "Returns true for known good args."
-    (is (h/checks? sorted.helpers/checks?
-                   'sorted.helpers/checks?
-                   num-tests)))
+    (is (h/checks? 'sorted.helpers/checks? num-tests)))
   (testing "Returns logical false when given bad args."
     (is (not (h/checks? 4 5 6)))))
 
@@ -37,12 +35,8 @@
 
 (deftest gen-samples-test
   (testing "Conforms to spec."
-    (is (h/checks? sorted.helpers/gen-samples
-                   'sorted.helpers/gen-samples
-                   limited-tests))))
+    (is (h/checks? 'sorted.helpers/gen-samples limited-tests))))
 
 (deftest verified?-test
   (testing "Conforms to spec."
-    (is (h/checks? sorted.helpers/verified?
-                   'sorted.helpers/verified?
-                   limited-tests))))
+    (is (h/checks? 'sorted.helpers/verified? limited-tests))))

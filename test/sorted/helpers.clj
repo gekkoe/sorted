@@ -10,18 +10,20 @@
 ;;;============================================================================
 
 (defn checks?
-  "Checks a function against a spec and returns true if all checks pass."
-  [f spec n]
-  (f/if-let-ok? [attempt
-                 (f/try*
-                  (-> (st/check-fn
-                       f
-                       spec
-                       {:clojure.spec.test.check/opts {:num-tests n}})
-                      :clojure.spec.test.check/ret
-                      :pass?))]
-                attempt
-                false))
+  "Checks a function against a spec and returns true if all checks pass.
+  If f is not supplied, will assume that f has same qualified name as spec."
+  ([spec n] (checks? (eval spec) spec n))
+  ([f spec n]
+   (f/if-let-ok? [attempt
+                  (f/try*
+                   (-> (st/check-fn
+                        f
+                        spec
+                        {:clojure.spec.test.check/opts {:num-tests n}})
+                       :clojure.spec.test.check/ret
+                       :pass?))]
+                 attempt
+                 false)))
 
 (defn contains-all?
   "Given a map and one or more keys, returns true if m contains all ks.
