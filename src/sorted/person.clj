@@ -85,7 +85,7 @@
   [vs]
   (if (s/valid? ::person-vals vs)
     (zipmap [::last-name ::first-name ::gender ::fav-color ::dob] vs)
-    (f/fail "Error in vals->person: %s" (s/explain-str ::person-vals vs))))
+    (f/fail "Error in vals->person: `%s` is not a valid :sorted.person/person-vals." vs)))
 
 ;;;============================================================================
 ;;;                           P U B L I C
@@ -234,8 +234,8 @@
   :fn (let [ds delim-regex-set
             found? (fn [result delim]
                      (f/if-let-ok?
-                      [f? (f/try* (re-find delim (-> result :args :s)))]
-                      f?
+                      [f (f/try* (re-find delim (-> result :args :s)))]
+                      f
                       false))]
         (s/or :true  (s/and #(:ret %)
                             ;; No delims found in s.
