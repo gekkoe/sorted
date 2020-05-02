@@ -1,6 +1,6 @@
 (ns sorted.helpers-test
   (:require [clojure.test :refer :all]
-            [sorted.helpers :refer :all]
+            [sorted.helpers :as h]
             [clojure.spec.alpha :as s]
             [clojure.spec.test.alpha :as st]))
 
@@ -18,11 +18,11 @@
             :clojure.spec.test.check/ret
             :pass?)))
   (testing "Returns true for known good args."
-    (is (checks? sorted.helpers/checks?
-                 'sorted.helpers/checks?
-                 num-tests)))
+    (is (h/checks? sorted.helpers/checks?
+                   'sorted.helpers/checks?
+                   num-tests)))
   (testing "Returns logical false when given bad args."
-    (is (not (checks? 4 5 6)))))
+    (is (not (h/checks? 4 5 6)))))
 
 (deftest contains-all?-test
   (testing "Returns true when passed a map and keys it contains"
@@ -32,17 +32,17 @@
   (testing "Returns false when m is not a map"
     (is (not-any? #(apply contains-all?
                           %
-                          (random-sample 0.01 (gen-samples ::any num-tests)))
-                  (gen-samples ::non-map num-tests)))))
+                          (random-sample 0.01 (h/gen-samples ::any num-tests)))
+                  (h/gen-samples ::non-map num-tests)))))
 
 (deftest gen-samples-test
   (testing "Conforms to spec."
-    (is (checks? sorted.helpers/gen-samples
-                 'sorted.helpers/gen-samples
-                 limited-tests))))
+    (is (h/checks? sorted.helpers/gen-samples
+                   'sorted.helpers/gen-samples
+                   limited-tests))))
 
 (deftest verified?-test
   (testing "Conforms to spec."
-    (is (checks? sorted.helpers/verified?
-                 'sorted.helpers/verified?
-                 limited-tests))))
+    (is (h/checks? sorted.helpers/verified?
+                   'sorted.helpers/verified?
+                   limited-tests))))
