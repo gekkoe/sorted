@@ -82,7 +82,7 @@ contain other delimiters, but I found that for the sake of the code's logic and
 testing it was sometimes simpler to just filter out that possibilty.
 * I've limited the range of acceptable dates to the years 1 through 9999. I
 tried with the built-in MIN and MAX dates but there are some off-by-one bugs and
-sign switching that happen with the MM/dd/yyyy formatter once the year numbers
+sign switching that happen with the M/d/yyyy formatter once the year numbers
 become large enough for java to throw in a + or - in the date. This seemed out
 of scope for this assignment, so I haven't spent more time finding a way around
 these issues.
