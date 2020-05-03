@@ -96,7 +96,7 @@
 (defn str->person
   "Expects a string containing a delimited list of fields in the order
   LastName FirstName Gender FavoriteColor DateOfBirth
-  where valid delims are pipe, comma, or space and date format is MM/dd/yyyy.
+  where valid delims are pipe, comma, or space and date format is M/d/yyyy.
   If delim is provided, will attempt to parse using that delim, but if it
   fails will attemp to use pipe, comma, or space, in that order.
   Returns a map that conforms to the :sorted.person/person spec or a Failure
@@ -131,9 +131,7 @@
 ;;;============================================================================
 
 (s/def ::delim-str
-  (s/with-gen
-    (s/and string? delim-str-set)
-    #(gen/one-of [(s/gen string?) (s/gen delim-str-set)])))
+  (s/with-gen (s/and string? delim-str-set) #(s/gen delim-str-set)))
 
 ;; java.util.regex.Pattern objects don't eval as = unless they are the same
 ;; object. so we convert them to strings for comparison.
@@ -141,8 +139,7 @@
                        (s/and
                         #(instance? java.util.regex.Pattern %)
                         #(delim-regex-str-set (str %)))
-                       #(gen/one-of [(s/gen delim-regex-set)
-                                     (s/gen #{#"bad" #"vals" #"here"})])))
+                       #(s/gen delim-regex-set)))
 
 #_(def min-day (.. java.time.LocalDate MIN toEpochDay))
 #_(def max-day (.. java.time.LocalDate MAX toEpochDay))
