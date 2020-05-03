@@ -29,18 +29,21 @@
 (def ws-delims
   #".*(\s+).*\s+.*\s+.*\s+\d{1,2}/\d{1,2}/[\+\-]*\d{1,9}\s*$")
 
-(defn no-delims?
-  "Searches a string for any instance of the delimiters pipe, comma, or space.
-  Returns true if none are found, or if an invalid value is passed as s. Returns
-  false if one or more is found."
+(defn get-delim
+  "Given a string, returns the first substring instance of the delimiters pipe,
+  comma, or space, in that order, and returns which one it found.
+  If no delimiter is found, or s cannot be parsed, returns nil."
   [s]
-  (if (string? s)
-    (not (re-find delim-regex s))
-    true))
+  (f/if-let-ok? [delim (f/try* (or (re-find #"\|" s)
+                                   (re-find #"," s)
+                                   (re-find #" " s)))]
+                delim
+                nil))
 
 (defn split-trim
-  "Splits a string using a delimiter and trims any extra whitespace from the
-  front and back of each substring. Returns a vector of the substrings.
+  "Splits the string s using the regex pattern delim and trims any extra
+  whitespace from the front and back of each substring. Returns a vector of the
+  substrings.
   Returns a Failure object if unsuccessful."
   [s delim]
   (if (and (s/valid? ::person-str s)
@@ -61,9 +64,7 @@
    (f/if-let-ok? [result (f/try*
                           (if-let [d-regex (delim-map delim)]
                             (split-trim s d-regex)
-                            (cond (re-find #"\|" s) (split-trim s #"\|")
-                                  (re-find #"," s)  (split-trim s #",")
-                                  :else             (split-trim s #" "))))]
+                            (split-trim s (delim-map (get-delim s)))))]
                  (vec result)
                  (f/fail "Error in split-on-delims: Could not parse `%s`\n%s"
                          s (f/message result)))))
@@ -158,7 +159,7 @@
   (s/with-gen (s/and string? #(f/ok? (f/try* (jt/local-date formatter %))))
               (constantly date-str-gen)))
 
-(s/def ::no-delim-str (s/and string? no-delims?))
+(s/def ::no-delim-str (s/and string? #(not (get-delim %))))
 (s/def ::last-name ::no-delim-str)
 (s/def ::first-name ::no-delim-str)
 (s/def ::gender ::no-delim-str)
@@ -178,7 +179,7 @@
 ;; Also worth noting, line breaks throw off the regex matchers, but it seems
 ;; reasonable, since this is line-by-line input, to exclude this case from
 ;; the generative tests.
-(def non-delim-gen (gen/such-that #(and (no-delims? %)
+(def non-delim-gen (gen/such-that #(and (not (get-delim %))
                                         (not (re-find line-breaks %)))
                                   (gen/string) 100))
 
@@ -200,6 +201,37 @@
                            non-delim-gen                           ; color
                            date-gen                                ; dob
                            (gen/elements (vec delim-str-set))))))  ; delim
+
+(s/fdef get-delim
+  :args (s/cat :s any?)
+  :ret (s/nilable string?)
+  :fn #(let [s (-> % :args :s)
+             ret (-> % :ret)]
+         (or (not ret)
+             ;; Should contain at least one delimiter if ret was truthy.
+             (f/if-let-ok? [d (f/try* (re-find delim-regex s))] d false))))
+
+(s/fdef split-trim
+  :args (s/cat :s ::person-str :delim ::delim-regex)
+  :ret (s/or :success ::person-strs
+             :failure f/failed?))
+
+(s/fdef split-on-delims
+  :args (s/or :unary  (s/cat :s ::person-str)
+              :binary (s/cat :s ::person-str
+                             :delim ::delim-str))
+  :ret (s/or :success ::person-strs
+             :failure f/failed?))
+
+(s/fdef strs->vals
+  :args (s/cat :ss ::person-strs)
+  :ret (s/or :success ::person-vals
+             :failure f/failed?))
+
+(s/fdef vals->person
+  :args (s/cat :vs ::person-vals)
+  :ret (s/or :success ::person
+             :failure f/failed?))
 
 (s/fdef str->person
   :args (s/or :unary (s/cat :s any?)
@@ -227,50 +259,10 @@
          (or (f/failed? ret)
              (= (str->person ret) p))))
 
-;; This spec may be a bit redundant/silly. I mainly wrote it to learn about
-;; writing specs for predicates.
-(s/fdef no-delims?
-  :args (s/cat :s any?)
-  :ret boolean?
-  :fn (let [ds delim-regex-set
-            found? (fn [result delim]
-                     (f/if-let-ok?
-                      [f (f/try* (re-find delim (-> result :args :s)))]
-                      f
-                      false))]
-        (s/or :true  (s/and #(:ret %)
-                            ;; No delims found in s.
-                            (fn [result] (not-any? #(found? result %) ds)))
-              :false (s/and #(not (:ret %))
-                            ;; At least one delim found in s.
-                            (fn [result] (some #(found? result %) ds))))))
-
-(s/fdef split-trim
-  :args (s/cat :s ::person-str :delim ::delim-regex)
-  :ret (s/or :success ::person-strs
-             :failure f/failed?))
-
-(s/fdef split-on-delims
-  :args (s/or :unary  (s/cat :s ::person-str)
-              :binary (s/cat :s ::person-str
-                             :delim ::delim-str))
-  :ret (s/or :success ::person-strs
-             :failure f/failed?))
-
-(s/fdef strs->vals
-  :args (s/cat :ss ::person-strs)
-  :ret (s/or :success ::person-vals
-             :failure f/failed?))
-
-(s/fdef vals->person
-  :args (s/cat :vs ::person-vals)
-  :ret (s/or :success ::person
-             :failure f/failed?))
-
 (comment
   (expound/explain-results (st/check 'sorted.person/person->str))
 
-  (expound/explain-results (st/check 'sorted.person/no-delims?
+  (expound/explain-results (st/check 'sorted.person/get-delim
                                      {:clojure.spec.test.check/opts
                                       {:num-tests 1000}}))
   )

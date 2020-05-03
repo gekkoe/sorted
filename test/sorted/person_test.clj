@@ -111,43 +111,9 @@
       (testing "that contains one of the expected delims"
         (is (every? #(re-find p/delim-regex %) samps))))))
 
-(deftest str->person-test
+(deftest get-delim-test
   (testing "Conforms to spec."
-    (is (h/checks? 'sorted.person/str->person num-tests)))
-  (testing "Returns a valid person when given good args"
-    (is (s/valid? ::p/person (p/str->person valid-person-str))))
-  (testing "Returns a Failure object when given bad args"
-    (let [ret (p/str->person "bad argument")]
-      (is (f/failed? ret))
-      (testing "containing the expected error message"
-        (is (= (str "Error in str->person: Could not parse `bad argument`\n"
-                    "Error in split-on-delims: Could not parse `bad argument`\n"
-                    "Error in split-trim: Could not split person `bad argument` "
-                    "with delim ` `") (f/message ret)))))))
-
-(deftest person->str-test
-  (testing "Conforms to spec."
-    (is (h/checks? 'sorted.person/person->str num-tests)))
-  (testing "Returns a valid person-str when given good args"
-    (is (s/valid? ::p/person-str (p/person->str valid-person " "))))
-  (testing "Returns a Failure object when given bad args"
-    (let [ret (p/person->str invalid-person " ")]
-      (is (f/failed? ret))
-      (testing "containing the expected error message"
-        (is (= (str "Error in person->str: `{:a 3, :sorted.person/last-name "
-                    "\"something\", :b [\"xyz\"], :sorted.person/fav-color 9}` "
-                    "is not a valid :sorted.person/person.")
-               (f/message ret)))))))
-
-(deftest no-delims?-test
-  (testing "Conforms to spec."
-    (is (h/checks? 'sorted.person/no-delims? num-tests)))
-  (testing "Returns true when passed a string with no delims"
-    (is (p/no-delims? "ThisHasNoDelims!!")))
-  (testing "Returns true when passed any non-string arg"
-    (is (every? p/no-delims? (samples ::no-strs))))
-  (testing "Returns false when passed a string with delims in it"
-    (is (not (p/no-delims? "This Has,Delims|")))))
+    (is (h/checks? 'sorted.person/get-delim num-tests))))
 
 (deftest split-trim-test
   (testing "Conforms to spec."
@@ -207,4 +173,32 @@
       (testing "containing the expected error message"
         (is (= (str "Error in vals->person: `[\"this\" \"is\" \"invalid\"]` is "
                     "not a valid :sorted.person/person-vals.")
+               (f/message ret)))))))
+
+(deftest str->person-test
+  (testing "Conforms to spec."
+    (is (h/checks? 'sorted.person/str->person num-tests)))
+  (testing "Returns a valid person when given good args"
+    (is (s/valid? ::p/person (p/str->person valid-person-str))))
+  (testing "Returns a Failure object when given bad args"
+    (let [ret (p/str->person "bad argument")]
+      (is (f/failed? ret))
+      (testing "containing the expected error message"
+        (is (= (str "Error in str->person: Could not parse `bad argument`\n"
+                    "Error in split-on-delims: Could not parse `bad argument`\n"
+                    "Error in split-trim: Could not split person `bad argument` "
+                    "with delim ` `") (f/message ret)))))))
+
+(deftest person->str-test
+  (testing "Conforms to spec."
+    (is (h/checks? 'sorted.person/person->str num-tests)))
+  (testing "Returns a valid person-str when given good args"
+    (is (s/valid? ::p/person-str (p/person->str valid-person " "))))
+  (testing "Returns a Failure object when given bad args"
+    (let [ret (p/person->str invalid-person " ")]
+      (is (f/failed? ret))
+      (testing "containing the expected error message"
+        (is (= (str "Error in person->str: `{:a 3, :sorted.person/last-name "
+                    "\"something\", :b [\"xyz\"], :sorted.person/fav-color 9}` "
+                    "is not a valid :sorted.person/person.")
                (f/message ret)))))))
