@@ -25,6 +25,8 @@
 
 (add-tap (bound-fn* clojure.pprint/pprint))
 
+(def space-delim-file "env/dev/resources/space-delim")
+
 (defn check
   ([spec] (check spec 1000))
   ([spec num-tests]
