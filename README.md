@@ -47,10 +47,7 @@ profiles.
   - tools.cli - A command line argument parser.
 
 ### Build Tools
-* This project will start out with lein, as this is what I'm most familiar with.
-At some point along the way though, I'll be looking into converting it to a
-CLI/deps.edn project to explore this new technology, which the customer
-indicated they are using in a prior interview.
+* This project will be using lein.
 * I'll be coding the project in Emacs with Spacemacs, but it should open and
 build fine in any other properly configured Clojure development environment.
 
