@@ -26,9 +26,9 @@
 ;; Some regex matchers that will determine if a string appears to be a
 ;; well-formed delimited string that could represent a ::person
 (def non-ws-delims
-  #".*?([|,]).*?\1.*?\1.*?\1\s*\d{1,2}/\d{1,2}/[\+\-]*\d{1,9}\s*$")
+  #".*?([|,]).*?\1.*?\1.*?\1\s*\d{1,2}/\d{1,2}/\d{1,9}\s*$")
 (def ws-delims
-  #".*(\s+).*\s+.*\s+.*\s+\d{1,2}/\d{1,2}/[\+\-]*\d{1,9}\s*$")
+       #".*(\s+).*\s+.*\s+.*\s+\d{1,2}/\d{1,2}/\d{1,9}\s*$")
 
 (defn get-delim
   "Given a string, returns the first substring instance of the delimiters pipe,
