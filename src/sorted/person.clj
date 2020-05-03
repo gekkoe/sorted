@@ -206,8 +206,8 @@
                            (gen/elements (vec delim-str-set))))))  ; delim
 
 (s/fdef get-delim
-  :args (s/cat :s any?)
-  :ret (s/nilable string?)
+  :args (s/cat :s (h/any-or ::person-str))
+  :ret (s/nilable ::delim-str)
   :fn #(let [s (-> % :args :s)
              ret (-> % :ret)]
          (or (not ret)
