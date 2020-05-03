@@ -13,9 +13,8 @@
 (def checks? #(h/checks? % num-samples))
 (def num-tests 100)    ; Number of times to check function specs.
 
-(def formatter "MM/dd/yyyy")
-(def min-date (jt/local-date formatter "01/01/0001"))
-(def max-date (jt/local-date formatter "12/31/9999"))
+(def min-date (jt/local-date p/formatter "1/1/0001"))
+(def max-date (jt/local-date p/formatter "12/31/9999"))
 
 (def num-person-fields 5)
 
@@ -23,18 +22,18 @@
                    ::p/first-name "Jane"
                    ::p/gender "Female"
                    ::p/fav-color "Red"
-                   ::p/dob (jt/local-date p/formatter "01/01/1949")})
+                   ::p/dob (jt/local-date p/formatter "1/1/1949")})
 (def invalid-person {:a 3
                      ::p/last-name "something"
                      :b ["xyz"]
                      ::p/fav-color 9})
-(def valid-person-str "Doe, Jane , Female, Red, 01/01/1949  ")
-(def valid-person-vec ["Doe" "Jane" "Female" "Red" "01/01/1949"])
+(def valid-person-str "Doe, Jane , Female, Red, 1/1/1949  ")
+(def valid-person-vec ["Doe" "Jane" "Female" "Red" "1/1/1949"])
 (def valid-person-vals-vec ["Doe"
                             "Jane"
                             "Female"
                             "Red"
-                            (jt/local-date formatter "01/01/1949")])
+                            (jt/local-date p/formatter "1/1/1949")])
 
 (s/def ::no-strs (s/and any? (complement string?)))
 
@@ -49,16 +48,16 @@
       (is (every? expected? (map str (samples ::p/delim-regex)))))))
 
 (deftest date-test
-  (testing "Generated dates are within range of 01/01/0001 and 12/31/9999"
+  (testing "Generated dates are within range of 1/1/0001 and 12/31/9999"
     (let [expected? #(and (jt/after?  % (jt/minus min-date (jt/days 1)))
                           (jt/before? % (jt/plus max-date (jt/days 1))))]
       (is (every? expected? (samples ::p/date))))))
 
 (deftest date-str-test
-  (testing "Generated date strings are within range of 01/01/0001 and 12/31/9999"
-    (let [expected? #(and (jt/after?  (jt/local-date formatter %)
+  (testing "Generated date strings are within range of 1/1/0001 and 12/31/9999"
+    (let [expected? #(and (jt/after?  (jt/local-date p/formatter %)
                                       (jt/minus min-date (jt/days 1)))
-                          (jt/before? (jt/local-date formatter %)
+                          (jt/before? (jt/local-date p/formatter %)
                                       (jt/plus max-date (jt/days 1))))]
       (is (every? expected? (samples ::p/date-str))))))
 

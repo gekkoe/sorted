@@ -13,7 +13,7 @@
 ;; NOTE: If these change, it'll be necessary to update doc strings throughout
 ;; this file.
 (def line-breaks #"[\n\r]")
-(def formatter (jt/formatter "MM/dd/yyyy"))
+(def formatter (jt/formatter "M/d/yyyy"))
 (def delim-map {"|" #"\|"
                  "," #","
                  " " #" "})
@@ -146,7 +146,7 @@
 
 #_(def min-day (.. java.time.LocalDate MIN toEpochDay))
 #_(def max-day (.. java.time.LocalDate MAX toEpochDay))
-(def min-day  -719162)  ; 01/01/0001
+(def min-day  -719162)  ; 1/1/0001
 (def max-day  2932896)  ; 12/31/9999
 (def epoch-day-gen (gen/choose min-day max-day))
 (def date-gen (gen/fmap #(. java.time.LocalDate ofEpochDay %) epoch-day-gen))
