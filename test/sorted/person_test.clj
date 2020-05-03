@@ -10,7 +10,7 @@
 
 (def num-samples 1000) ; Increase this to run slower but more exhaustive tests.
 (def samples #(h/gen-samples % num-samples))
-
+(def checks? #(h/checks? % num-samples))
 (def num-tests 100)    ; Number of times to check function specs.
 
 (def formatter "MM/dd/yyyy")
@@ -113,11 +113,18 @@
 
 (deftest get-delim-test
   (testing "Conforms to spec."
-    (is (h/checks? 'sorted.person/get-delim num-tests))))
+    (is (checks? 'sorted.person/get-delim)))
+  (testing "Returns a delim when passed a string containing one or more"
+    (is (every? p/delim-str-set (map p/get-delim (samples ::p/person-str)))))
+  (testing "Returns nil when"
+    (testing "passed a string with no delims"
+      (is (every? nil? (map  p/get-delim (samples ::p/no-delim-str)))))
+    (testing "passed a non-string arg"
+      (is (every? nil? (map p/get-delim (samples ::no-strs)))))))
 
 (deftest split-trim-test
   (testing "Conforms to spec."
-    (is (h/checks? 'sorted.person/split-trim num-tests)))
+    (is (checks? 'sorted.person/split-trim)))
   (testing "Returns expected vector when passed good args"
     (is (= valid-person-vec (p/split-trim valid-person-str #","))))
   (testing "Returns a Failure object when passed bad args"
@@ -130,7 +137,7 @@
 
 (deftest split-on-delims-test
   (testing "Conforms to spec."
-    (is (h/checks? 'sorted.person/split-on-delims num-tests)))
+    (is (checks? 'sorted.person/split-on-delims)))
   (testing "Returns expected vector when passed good args"
     (testing "when passed no delim"
       (is (= valid-person-vec (p/split-on-delims valid-person-str))))
@@ -151,7 +158,7 @@
 
 (deftest strs->vals-test
   (testing "Conforms to spec."
-    (is (h/checks? 'sorted.person/strs->vals num-tests)))
+    (is (checks? 'sorted.person/strs->vals)))
   (testing "Returns a valid :sorted.person/person-vals when passed a good arg"
     (is (s/valid? ::p/person-vals (p/strs->vals valid-person-vec))))
   (testing "Returns a Failure object when passed a bad arg"
@@ -164,7 +171,7 @@
 
 (deftest vals->person-test
   (testing "Conforms to spec."
-    (is (h/checks? 'sorted.person/vals->person num-tests)))
+    (is (checks? 'sorted.person/vals->person)))
   (testing "Returns a valid :sorted.person/person when passed a good arg"
     (is (s/valid? ::p/person (p/vals->person valid-person-vals-vec))))
   (testing "Returns a Failure object when passed a bad arg"
@@ -177,7 +184,7 @@
 
 (deftest str->person-test
   (testing "Conforms to spec."
-    (is (h/checks? 'sorted.person/str->person num-tests)))
+    (is (checks? 'sorted.person/str->person)))
   (testing "Returns a valid person when given good args"
     (is (s/valid? ::p/person (p/str->person valid-person-str))))
   (testing "Returns a Failure object when given bad args"
@@ -191,7 +198,7 @@
 
 (deftest person->str-test
   (testing "Conforms to spec."
-    (is (h/checks? 'sorted.person/person->str num-tests)))
+    (is (checks? 'sorted.person/person->str)))
   (testing "Returns a valid person-str when given good args"
     (is (s/valid? ::p/person-str (p/person->str valid-person " "))))
   (testing "Returns a Failure object when given bad args"
