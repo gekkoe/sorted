@@ -13,9 +13,12 @@
 
 (def cli-options
   ;; An option with a required argument
-  [#_["-p" "--port PORT" "Port number. If not specified, does not start a server."
+  [#_["-p" "--port PORT" "Port number. If not specified, doesn't start server."
       :parse-fn #(Integer/parseInt %)
       :validate [#(< 0 % 0x10000) "Must be a number between 0 and 65536"]]
+   ["-d" "--dob" "Sort output by date of birth, ascending."]
+   ["-g" "--gender" "Sort by gender, female first, then by last name ascending."]
+   ["-l" "--last" "Sort output by last name, descending."]
    ["-h" "--help" "Prints this help text.\n\n"]])
 
 (defn -main
