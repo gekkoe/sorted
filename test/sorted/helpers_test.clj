@@ -4,8 +4,7 @@
             [clojure.spec.alpha :as s]
             [clojure.spec.test.alpha :as st]))
 
-(def limited-tests 15) ; These tests will become very slow if > about 25
-(def num-tests 100)
+(def num-tests 300)
 (s/def ::non-map (s/and any? (complement map?)))
 (s/def ::any any?)
 
@@ -35,8 +34,8 @@
 
 (deftest gen-samples-test
   (testing "Conforms to spec."
-    (is (h/checks? 'sorted.helpers/gen-samples limited-tests))))
+    (is (h/checks? 'sorted.helpers/gen-samples num-tests))))
 
 (deftest verified?-test
   (testing "Conforms to spec."
-    (is (h/checks? 'sorted.helpers/verified? limited-tests))))
+    (is (h/checks? 'sorted.helpers/verified? num-tests))))

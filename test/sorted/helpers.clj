@@ -9,6 +9,16 @@
 ;;;                           P U B L I C
 ;;;============================================================================
 
+(defn any-or
+  "Given a spec, a symbol for a spec, or a predicate, returns a spec that will
+  generate either the normal values expected or any type of value. Useful for
+  testing fdef args."
+  [spec-or-pred]
+  (s/with-gen any? #(gen/one-of [(s/gen (if (symbol? spec-or-pred)
+                                          (s/get-spec spec-or-pred)
+                                          spec-or-pred))
+                                 (s/gen any?)])))
+
 (defn checks?
   "Checks a function against a spec and returns true if all checks pass.
   If f is not supplied, will assume that f has same qualified name as spec."
@@ -63,52 +73,38 @@
 
 (s/def ::sample1 int?)
 (s/def ::sample2 string?)
-(def spec-gen (gen/frequency  ; Produce valid and invalid specs for testing.
-               [[2 (gen/return ::sample1)]
-                [2 (gen/return ::sample2)]
-                [1 (gen/return 42)]
-                [1 (s/gen any?)]]))
-(s/def ::sample-spec (s/with-gen any? (constantly spec-gen)))
+(s/def ::sample-spec (s/with-gen any? #(gen/one-of
+                                        [(gen/return (s/get-spec ::sample1))
+                                         (gen/return (s/get-spec ::sample2))])))
 
-(def fn-gen (gen/frequency  ; Produce valid and invalid fns for testing.
-             [[1 (gen/return ::sample1)]
-              [1 (gen/return ::sample2)]
-              [3 (gen/return (constantly 42))]  ; Valid fn here
-              [1 (s/gen any?)]]))
-(s/def ::sample-fn (s/with-gen any? (constantly fn-gen)))
+(s/def ::sample-fn (s/with-gen any? #(gen/one-of [(gen/return (constantly 42))
+                                                  (gen/return inc)])))
 
 (def ^:private samples-num 500)
 
-;; Not sure what I could put in :fn on this one that wouldn't just be a direct
-;; repeat of the function itself. So I've just included some manual testing in
-;; additional to the basic generative spec compliance tests.
+(s/fdef any-or
+  :args (s/cat :spec (any-or ::sample-spec))
+  :ret s/spec?)
+
 (s/fdef checks?
-  :args (s/cat :f ::sample-fn :spec ::sample-spec :n pos-int?)
+  :args (s/cat :f (any-or ::sample-fn)
+               :spec (any-or ::sample-spec)
+               :n (any-or pos-int?))
   :ret (s/nilable boolean?))
 
 (s/fdef contains-all?
-  :args (s/cat :m map? :ks (s/* any?))
+  :args (s/cat :m (any-or map?) :ks (s/* any?))
   :ret boolean?)
 
-;; NOTE: While the following specs do check out in every case I've tried, they
-;;   starts taking an extremely long time to run when I attempt to run more than
-;;   about 22 tests in a given call to st/check-fn. I'm not certain what is
-;;   causing this behavior, though I suspect it has to do with gen/frequency. In
-;;   production code this would likely need to be ironed out or at least
-;;   explained before release.
-
 (s/fdef gen-samples
-  :args (s/cat :spec ::sample-spec :n pos-int?)
+  :args (s/cat :spec (any-or ::sample-spec) :n (any-or pos-int?))
   :ret (s/or :success coll?
-             :failure f/failed?)
-  :fn #(let [spec (s/get-spec (-> % :args :spec))
-             ret  (-> % :ret second)]
-         (if spec
-           (every? (partial s/valid? spec) ret)
-           (f/failed? ret))))
+             :failure f/failed?))
 
 (s/fdef verified?
-  :args (s/cat :spec ::sample-spec :should-be ::sample-spec :n pos-int?)
+  :args (s/cat :spec (any-or ::sample-spec)
+               :should-be (any-or ::sample-spec)
+               :n (any-or pos-int?))
   :ret boolean?
   :fn #(let [spec-kw (-> % :args :spec)
              spec (s/get-spec spec-kw)
