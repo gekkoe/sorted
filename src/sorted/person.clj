@@ -4,7 +4,8 @@
             [clojure.string :refer [split trim join]]
             [failjure.core :as f]
             [java-time :as jt]
-            [clojure.spec.test.alpha :as st]))
+            [clojure.spec.test.alpha :as st]
+            [sorted.helpers :as h]))
 
 ;;;============================================================================
 ;;;                          H E L P E R S
@@ -100,7 +101,8 @@
   If delim is provided, will attempt to parse using that delim, but if it
   fails will attemp to use pipe, comma, or space, in that order.
   Returns a map that conforms to the :sorted.person/person spec or a Failure
-  object."
+  object.
+  Returns a Failure object if unsuccessful."
   ([s]
    (str->person s nil))
   ([s delim]
@@ -114,15 +116,19 @@
 
 (defn person->str
   "Expects a map that conforms to :sorted.person/person.
-  Returns a string representation of those values delimited by delim."
-  [{::keys [last-name first-name gender fav-color dob] :as person} delim]
-  (if (s/valid? ::person person)
-    (let [first4 (join delim [last-name first-name gender fav-color])]
-      (f/if-let-ok? [dob-str (f/try* (jt/format formatter dob))]
-                    (join delim [first4 dob-str])
+  Returns a string representation of those values delimited by delim.
+  Returns a Failure object if unsuccessful."
+  [person delim]
+  (if (and (s/valid? ::person person) (s/valid? ::delim-str delim))
+    (let [{::keys [last-name first-name gender fav-color dob]} person
+          first4 (join delim [last-name first-name gender fav-color])]
+      (f/if-let-ok? [result (f/try* (->> (jt/format formatter dob)
+                                         (vector first4)
+                                         (join delim)))]
+                    result
                     (f/fail "Error in person->str: Could not convert `%s`\n%s"
                             person
-                            (f/message dob-str))))
+                            (f/message result))))
     (f/fail (str "Error in person->str: `%s` is not a valid "
                  ":sorted.person/person.") person)))
 
@@ -209,30 +215,32 @@
              (f/if-let-ok? [d (f/try* (re-find delim-regex s))] d false))))
 
 (s/fdef split-trim
-  :args (s/cat :s ::person-str :delim ::delim-regex)
+  :args (s/cat :s (h/any-or ::person-str)
+               :delim (h/any-or ::delim-regex))
   :ret (s/or :success ::person-strs
              :failure f/failed?))
 
 (s/fdef split-on-delims
-  :args (s/or :unary  (s/cat :s ::person-str)
-              :binary (s/cat :s ::person-str
-                             :delim ::delim-str))
+  :args (s/or :unary  (s/cat :s (h/any-or ::person-str))
+              :binary (s/cat :s (h/any-or ::person-str)
+                             :delim (h/any-or ::delim-str)))
   :ret (s/or :success ::person-strs
              :failure f/failed?))
 
 (s/fdef strs->vals
-  :args (s/cat :ss ::person-strs)
+  :args (s/cat :ss (h/any-or ::person-strs))
   :ret (s/or :success ::person-vals
              :failure f/failed?))
 
 (s/fdef vals->person
-  :args (s/cat :vs ::person-vals)
+  :args (s/cat :vs (h/any-or ::person-vals))
   :ret (s/or :success ::person
              :failure f/failed?))
 
 (s/fdef str->person
-  :args (s/or :unary (s/cat :s any?)
-              :binary (s/cat :s ::person-str :delim ::delim-str))
+  :args (s/or :unary (s/cat :s (h/any-or ::person-str))
+              :binary (s/cat :s (h/any-or ::person-str)
+                             :delim (h/any-or ::delim-str)))
   :ret  (s/or :success ::person
               :failure f/failed?)
   ;; Verify that the person generatated has vals that correspond to those parsed
@@ -247,7 +255,7 @@
                                split-on-delims)))))
 
 (s/fdef person->str
-  :args (s/cat :p ::person :d ::delim-str)
+  :args (s/cat :p (h/any-or ::person) :d (h/any-or ::delim-str))
   :ret  (s/or :success ::person-str
               :failure f/failed?)
   ;; Verify that we can turn the ret val back into the original ::person
