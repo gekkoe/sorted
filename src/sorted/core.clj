@@ -61,9 +61,12 @@
                              :else  nil)
              ::files arguments})))
 
+(defn system-exit [status]
+  (System/exit status))
+
 (defn exit [status msg]
   (println msg)
-  #_(System/exit status))
+  (system-exit status))
 
 (defn load-files!
   [files]
@@ -75,12 +78,14 @@
 
 (defn sort-people
   [sort-kw]
-  (if-let [order (case sort-kw
-                   ::p/dob compare
-                   ::p/gender compare
-                   ::p/last-name #(compare %2 %1)
-                   nil)]
-    (vec (sort-by sort-kw order @people))
+  (if-let [comparitor
+           (case sort-kw
+             ::p/dob       (fn [x y] (compare [(sort-kw x) (::p/last-name x)]
+                                              [(sort-kw y) (::p/last-name y)]))
+             ::p/gender    (fn [x y] (compare (sort-kw x) (sort-kw y)))
+             ::p/last-name (fn [x y] (compare (sort-kw y) (sort-kw x)))
+             (constantly 0))] ; if no valid kw, just don't sort
+    (vec (sort comparitor @people))
     @people))
 
 (defn -main
@@ -95,7 +100,7 @@
         (->> (sort-people sort-kw)
              (map #(p/person->str % " "))
              (join \newline)
-              println)))))
+             (exit 0))))))
 
 ;;;============================================================================
 ;;;                              S P E C S
@@ -132,4 +137,4 @@
 
 (s/fdef sort-people
   :args (s/cat :sort-kw ::sort-kw)
-  :ret (s/coll-of string?))
+  :ret (s/coll-of #(s/valid? ::p/person %)))
