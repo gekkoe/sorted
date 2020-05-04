@@ -31,8 +31,8 @@
   [& args]
   (with-redefs [sorted.core/system-exit
                 (fn [status]
-                  (println
-                   (format "System Exit Overridden by User.clj. Status: %s" status)))]
+                  (printf "System Exit Overridden by User.clj. Status: %s\n"
+                          status))]
     (apply c/-main args)))
 
 (defn check
