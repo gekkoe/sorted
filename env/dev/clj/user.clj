@@ -11,7 +11,7 @@
    [failjure.core :as f]
    [java-time :as jt]
    #_[mount.core :as mount]
-   [sorted.core :refer :all]
+   [sorted.core :as c]
    [sorted.helpers :as h]
    [sorted.person :as p]
    [sorted.fileio :as file]))
@@ -26,6 +26,14 @@
 (add-tap (bound-fn* clojure.pprint/pprint))
 
 (def space-delim-file "env/dev/resources/space-delim")
+
+(defn -main
+  [& args]
+  (with-redefs [sorted.core/system-exit
+                (fn [status]
+                  (println
+                   (format "System Exit Overridden by User.clj. Status: %s" status)))]
+    (apply c/-main args)))
 
 (defn check
   ([spec] (check spec 1000))
