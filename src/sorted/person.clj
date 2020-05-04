@@ -4,7 +4,6 @@
             [clojure.string :refer [split trim join]]
             [failjure.core :as f]
             [java-time :as jt]
-            [clojure.spec.test.alpha :as st]
             [sorted.helpers :as h]))
 
 ;;;============================================================================
@@ -263,11 +262,3 @@
              p (-> % :args :p)]
          (or (f/failed? ret)
              (= (str->person ret) p))))
-
-(comment
-  (expound/explain-results (st/check 'sorted.person/person->str))
-
-  (expound/explain-results (st/check 'sorted.person/get-delim
-                                     {:clojure.spec.test.check/opts
-                                      {:num-tests 1000}}))
-  )
