@@ -1,5 +1,6 @@
 (ns sorted.core
-  (:require [clojure.tools.cli :refer [parse-opts]]
+  (:require [clojure.spec.alpha :as s]
+            [clojure.tools.cli :refer [parse-opts]]
             [clojure.string :refer [join]]
             [sorted.person :as p]
             [sorted.fileio :as file]
@@ -46,19 +47,19 @@
                         count)]
     (cond
       (:help options) ; help => exit OK with usage summary
-      {:exit-message (usage summary) :ok? true}
+      {::exit-message (usage summary) ::ok? true}
       errors ; errors => exit with description of errors
-      {:exit-message (error-msg errors)}
+      {::exit-message (error-msg errors)}
       ;; Make sure no more than one sort option in indicated
       (> sort-count 1)
-      {:exit-message "Please select no more than one sort option."}
+      {::exit-message "Please select no more than one sort option."}
       (empty? arguments)
-      {:exit-message "Please provide at least one file with people records in it."}
-      :else {:sort-kw (cond dob    ::p/dob
-                            gender ::p/gender
-                            last   ::p/last-name
-                            :else  nil)
-             :files arguments})))
+      {::exit-message "Please provide at least one file with people records in it."}
+      :else {::sort-kw (cond dob    ::p/dob
+                             gender ::p/gender
+                             last   ::p/last-name
+                             :else  nil)
+             ::files arguments})))
 
 (defn exit [status msg]
   (println msg)
@@ -87,17 +88,48 @@
   namespace. Parses these files and prints out the people in them sorted one of
   three ways depending on which command line option is selected."
   [& args]
-  (let [{:keys [sort-kw files exit-message ok?]} (validate-args args)]
+  (let [{::keys [sort-kw files exit-message ok?]} (validate-args args)]
     (if exit-message
       (exit (if ok? 0 1) exit-message)
       (when (load-files! files)
         (->> (sort-people sort-kw)
              (map #(p/person->str % " "))
              (join \newline)
-             print)))))
+              println)))))
 
+;;;============================================================================
+;;;                              S P E C S
+;;;============================================================================
 
-(comment
-  (map #(p/person->str % " ") (sort-by ::p/dob #(compare %2 %1)
-                                       (-main "env/dev/resources/space-delim")))
-  )
+(s/def ::args (s/coll-of string?))
+(s/def ::exit-message string?)
+(s/def ::ok? boolean?)
+(s/def ::exit-instructions (s/keys :req [::exit-message] :opt [::ok?]))
+(s/def ::sort-kw (s/nilable keyword?))
+(s/def ::files (s/coll-of string?))
+(s/def ::action-instructions (s/keys :req [::sort-kw ::files]))
+
+(s/fdef usage
+  :args (s/cat :summary string?)
+  :ret string?
+  :fn #(let [summary (-> % :args :summary)
+             ret (-> % :ret)]
+         (and (not= summary ret)
+              (.contains ret summary))))
+
+(s/fdef error-msg
+  :args (s/cat :errors coll?)
+  :ret string?
+  :fn #(let [errors (join \newline (-> % :args :errors))
+             ret (-> % :ret)]
+         (and (not= errors ret)
+              (.contains ret errors))))
+
+(s/fdef validate-args
+  :args (s/cat :args ::args)
+  :ret (s/or :exit   ::exit-instructions
+             :action ::action-instructions))
+
+(s/fdef sort-people
+  :args (s/cat :sort-kw ::sort-kw)
+  :ret (s/coll-of string?))
