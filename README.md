@@ -50,6 +50,10 @@ profiles.
 * This project will be using lein.
 * I'll be coding the project in Emacs with Spacemacs, but it should open and
 build fine in any other properly configured Clojure development environment.
+* To create a self-contained executable for the releases I'm using a script that
+  can be concatinated with a jar file and runs it, passing in any commands
+  given. The file name of the executable is _sorted.run_ and it can be rebuilt
+  using the shell command _build-executable.sh_ in the project's root.
 
 ### Coding Standards
 I will be using some fairly standard Clojure conventions such as the ones

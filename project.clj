@@ -1,4 +1,4 @@
-(defproject sorted "0.1.0-SNAPSHOT"
+(defproject sorted "1.0.0-SNAPSHOT"
   :description "sorted - A simple program to sort people."
 
   :dependencies [[cheshire "5.10.0"]
