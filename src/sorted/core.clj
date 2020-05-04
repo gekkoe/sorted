@@ -53,6 +53,8 @@
       ;; Make sure no more than one sort option in indicated
       (> sort-count 1)
       {::exit-message "Please select no more than one sort option."}
+      (and (empty? options) (empty? arguments))
+      {::exit-message (usage summary)}
       (empty? arguments)
       {::exit-message "Please provide at least one file with people records in it."}
       :else {::sort-kw (cond dob    ::p/dob
