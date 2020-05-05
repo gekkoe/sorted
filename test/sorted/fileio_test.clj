@@ -1,8 +1,7 @@
 (ns sorted.fileio-test
   (:require [clojure.test :refer :all]
             [sorted.fileio :refer :all]
-            [failjure.core :as f]
-            [clojure.spec.alpha :as s]))
+            [failjure.core :as f]))
 
 (def ^:private existent-file "README.md")
 (def ^:private non-existent-file "non-existent-file.txt")
