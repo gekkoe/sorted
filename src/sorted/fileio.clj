@@ -22,3 +22,13 @@
                                 (vec (line-seq rdr))))]
                 text
                 (f/fail "Error in text-read: %s" (f/message text))))
+
+(s/fdef exists?
+  :args (s/cat :file-name string?)
+  :ret (s/or :success boolean?
+             :failure f/failed?))
+
+(s/fdef text-read
+  :args (s/cat :file-name string?)
+  :ret (s/or :success (s/and vector? (s/coll-of string?))
+             :failure f/failed?))

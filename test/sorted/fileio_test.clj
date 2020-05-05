@@ -1,13 +1,18 @@
 (ns sorted.fileio-test
   (:require [clojure.test :refer :all]
             [sorted.fileio :refer :all]
-            [failjure.core :as f]))
+            [failjure.core :as f]
+            [sorted.helpers :as h]))
 
-(def ^:private existent-file "README.md")
-(def ^:private non-existent-file "non-existent-file.txt")
-(def ^:private invalid-file 3)
+(def existent-file "README.md")
+(def non-existent-file "non-existent-file.txt")
+(def invalid-file 3)
+(def num-tests 500)
+(def checks? #(h/checks? % num-tests))
 
 (deftest exists?-test
+  (testing "Conforms to spec."
+    (checks? 'sorted.fileio/exists?))
   (testing "Checking if a file exists"
     (testing "returns true when the file does exist"
       (is (exists? existent-file)))
@@ -23,6 +28,8 @@
           (is (= error-msg (f/message returned))))))))
 
 (deftest text-read-test
+  (testing "Conforms to spec."
+    (checks? 'sorted.fileio/text-read))
   (testing "Reading a known file"
     (let [file-lines (text-read existent-file)]
       (testing "returns a vector"
