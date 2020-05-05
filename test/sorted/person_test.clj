@@ -3,7 +3,6 @@
             [sorted.person :as p]
             [sorted.helpers :as h]
             [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as g]
             [java-time :as jt]
             [clojure.spec.gen.alpha :as gen]
             [failjure.core :as f]))
