@@ -33,7 +33,6 @@
     (testing "Calls System/exit with status as an arg"
       (is (= 42 (c/exit 42 "Exit called from tests with status 42."))))))
 
-
 (with-redefs [sorted.fileio/text-read (constantly test-file)]
   (let [result (c/load-files! ["someFileName"])]
     (deftest load-files!-test
