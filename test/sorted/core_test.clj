@@ -5,7 +5,7 @@
             [sorted.person :as p]))
 
 (def num-tests 1000) ; Increase this to run slower but more exhaustive tests.
-(def checks? #(h/checks? % num-tests))
+(def checks? (h/checks? num-tests))
 
 (def jane "Doe Jane Female Purple 1/1/2000")
 (def june "Darla June Female Orange 1/1/2000")

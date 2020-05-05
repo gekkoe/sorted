@@ -7,10 +7,10 @@
             [clojure.spec.gen.alpha :as gen]
             [failjure.core :as f]))
 
-(def num-samples 1000) ; Increase this to run slower but more exhaustive tests.
-(def samples #(h/gen-samples % num-samples))
-(def checks? #(h/checks? % num-samples))
-(def num-tests 100)    ; Number of times to check function specs.
+(def num-samples 1000) ; Amount of sample data to produce.
+(def gen-samples (h/gen-samples num-samples))
+(def num-tests 1000)    ; Number of times to check function specs.
+(def checks? (h/checks? num-tests))
 
 (def min-date (jt/local-date p/formatter "1/1/0001"))
 (def max-date (jt/local-date p/formatter "12/31/9999"))
@@ -39,18 +39,18 @@
 (deftest delim-str-test
   (let [expected? p/delim-str-set]
     (testing "Generated strings contain expected delims"
-      (is (every? expected? (samples ::p/delim-str))))))
+      (is (every? expected? (gen-samples ::p/delim-str))))))
 
 (deftest delim-regex-test
   (let [expected? p/delim-regex-str-set]
     (testing "Generated delim regex patterns are expected delims"
-      (is (every? expected? (map str (samples ::p/delim-regex)))))))
+      (is (every? expected? (map str (gen-samples ::p/delim-regex)))))))
 
 (deftest date-test
   (testing "Generated dates are within range of 1/1/0001 and 12/31/9999"
     (let [expected? #(and (jt/after?  % (jt/minus min-date (jt/days 1)))
                           (jt/before? % (jt/plus max-date (jt/days 1))))]
-      (is (every? expected? (samples ::p/date))))))
+      (is (every? expected? (gen-samples ::p/date))))))
 
 (deftest date-str-test
   (testing "Generated date strings are within range of 1/1/0001 and 12/31/9999"
@@ -58,15 +58,15 @@
                                       (jt/minus min-date (jt/days 1)))
                           (jt/before? (jt/local-date p/formatter %)
                                       (jt/plus max-date (jt/days 1))))]
-      (is (every? expected? (samples ::p/date-str))))))
+      (is (every? expected? (gen-samples ::p/date-str))))))
 
 (deftest no-delim-str-test
   (testing "Generated strings do not contain delims"
-    (is (not-any? #(re-find p/delim-regex %) (samples ::p/no-delim-str)))))
+    (is (not-any? #(re-find p/delim-regex %) (gen-samples ::p/no-delim-str)))))
 
 (deftest no-delim-specs-test
   (testing "Expected specs conform to :sorted.person/no-delim-str."
-    (let [verified? #(h/verified? % ::p/no-delim-str num-samples)]
+    (let [verified? (h/verified? ::p/no-delim-str num-samples)]
       (is (verified? ::p/last-name))
       (is (verified? ::p/first-name))
       (is (verified? ::p/gender))
@@ -83,7 +83,7 @@
     (is (not (s/valid? ::p/person invalid-person)))))
 
 (deftest person-strs-test
-  (let [samps (samples ::p/person-strs)]
+  (let [samps (gen-samples ::p/person-strs)]
     (testing "Generated values are vectors"
       (is (every? vector? samps))
       (testing "of strings"
@@ -94,14 +94,14 @@
 (s/def ::person-vals-shape
   (s/tuple string? string? string? string? #(instance? java.time.LocalDate %)))
 (deftest person-vals-test
-  (let [samps (samples ::p/person-vals)]
+  (let [samps (gen-samples ::p/person-vals)]
     (testing "Generated values are vectors"
       (is (every? vector? samps))
       (testing "of string string string string LocalDate"
         (is (every? #(s/valid? ::person-vals-shape %) samps))))))
 
 (deftest person-str-test
-  (let [samps (samples ::p/person-str)]
+  (let [samps (gen-samples ::p/person-str)]
     (testing "Generated values are strings"
       (is (every? string? samps))
       (testing "that do not contain line breaks or carriage returns"
@@ -113,12 +113,12 @@
   (testing "Conforms to spec."
     (is (checks? 'sorted.person/get-delim)))
   (testing "Returns a delim when passed a string containing one or more"
-    (is (every? p/delim-str-set (map p/get-delim (samples ::p/person-str)))))
+    (is (every? p/delim-str-set (map p/get-delim (gen-samples ::p/person-str)))))
   (testing "Returns nil when"
     (testing "passed a string with no delims"
-      (is (every? nil? (map  p/get-delim (samples ::p/no-delim-str)))))
+      (is (every? nil? (map  p/get-delim (gen-samples ::p/no-delim-str)))))
     (testing "passed a non-string arg"
-      (is (every? nil? (map p/get-delim (samples ::no-strs)))))))
+      (is (every? nil? (map p/get-delim (gen-samples ::no-strs)))))))
 
 (deftest split-trim-test
   (testing "Conforms to spec."

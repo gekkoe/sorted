@@ -5,6 +5,7 @@
             [clojure.spec.test.alpha :as st]))
 
 (def num-tests 300)
+(def checks? (h/checks? num-tests))
 (s/def ::non-map (s/and any? (complement map?)))
 (s/def ::any any?)
 
@@ -34,8 +35,8 @@
 
 (deftest gen-samples-test
   (testing "Conforms to spec."
-    (is (h/checks? 'sorted.helpers/gen-samples num-tests))))
+    (is (checks? 'sorted.helpers/gen-samples))))
 
 (deftest verified?-test
   (testing "Conforms to spec."
-    (is (h/checks? 'sorted.helpers/verified? num-tests))))
+    (is (checks? 'sorted.helpers/verified?))))

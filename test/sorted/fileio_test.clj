@@ -8,7 +8,7 @@
 (def non-existent-file "non-existent-file.txt")
 (def invalid-file 3)
 (def num-tests 500)
-(def checks? #(h/checks? % num-tests))
+(def checks? (h/checks? num-tests))
 
 (deftest exists?-test
   (testing "Conforms to spec."

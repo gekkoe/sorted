@@ -21,7 +21,10 @@
 
 (defn checks?
   "Checks a function against a spec and returns true if all checks pass.
-  If f is not supplied, will assume that f has same qualified name as spec."
+  If f is not supplied but spec is, will assume that f has same qualified name
+  as spec. If passed only n, returns a function that takes a spec and calls
+  (checks? spec n)."
+  ([n] (fn [spec] (checks? spec n)))
   ([spec n] (checks? (eval spec) spec n))
   ([f spec n]
    (f/if-let-ok? [attempt
@@ -45,7 +48,9 @@
 
 (defn gen-samples
   "Given a spec, generates a collection of n random samples.
-  Returns a Failure object if unsuccessful."
+  Returns a Failure object if unsuccessful. If passed only n, returns a function
+  that takes a spec and calls (gen-samples spec n)."
+  ([n] (fn [spec] (gen-samples spec n)))
   ([spec n]
    (if (s/get-spec spec)
      (f/if-let-ok?
@@ -58,14 +63,18 @@
      (f/fail "Error in gen-samples: `%s` is not a valid spec." spec))))
 
 (defn verified?
-  "Returns true if every one of n generated samples of spec is a valid
-  should-be."
-  [spec should-be n]
-  (f/if-let-ok? [attempt (f/try*
-                          (every? #(s/valid? (s/get-spec should-be) %)
-                                  (gen-samples spec n)))]
-                attempt
-                false))
+  "Returns true if every one of n generated samples of spec is a valid should-be.
+  If passed only n, returns a function that takes spec and should-be and
+  calls (verified? spec should-be n). If passed only should-be and n, returns a
+  function that takes a spec and calls (verified? spec should-be n)"
+  ([n] (fn [spec should-be] (verified? spec should-be n)))
+  ([should-be n] (fn [spec] (verified? spec should-be n)))
+  ([spec should-be n]
+   (f/if-let-ok? [attempt (f/try*
+                           (every? #(s/valid? (s/get-spec should-be) %)
+                                   (gen-samples spec n)))]
+                 attempt
+                 false)))
 
 ;;;============================================================================
 ;;;                              S P E C S
@@ -87,30 +96,43 @@
   :ret s/spec?)
 
 (s/fdef checks?
-  :args (s/cat :f (any-or ::sample-fn)
-               :spec (any-or ::sample-spec)
-               :n (any-or pos-int?))
-  :ret (s/nilable boolean?))
+  :args (s/or :unary   (s/cat :n (any-or pos-int?))
+              :binary  (s/cat :spec ::sample-spec
+                              :n (any-or pos-int?))
+              :ternary (s/cat :f (any-or ::sample-fn)
+                              :spec (any-or ::sample-spec)
+                              :n (any-or pos-int?)))
+  :ret (s/or :partial fn?
+             :full    (s/nilable boolean?)))
 
 (s/fdef contains-all?
   :args (s/cat :m (any-or map?) :ks (s/* any?))
   :ret boolean?)
 
 (s/fdef gen-samples
-  :args (s/cat :spec (any-or ::sample-spec) :n (any-or pos-int?))
-  :ret (s/or :success coll?
+  :args (s/or :unary  (s/cat :n (any-or pos-int?))
+              :binary (s/cat :spec (any-or ::sample-spec) :n (any-or pos-int?)))
+  :ret (s/or :partial fn?
+             :success coll?
              :failure f/failed?))
 
 (s/fdef verified?
-  :args (s/cat :spec (any-or ::sample-spec)
-               :should-be (any-or ::sample-spec)
-               :n (any-or pos-int?))
-  :ret boolean?
-  :fn #(let [spec-kw (-> % :args :spec)
-             spec (s/get-spec spec-kw)
-             should-be (s/get-spec (-> % :args :should-be))
-             ret  (-> % :ret)]
-         (if (and spec should-be)            ; We have valid specs so...
-           (= ret (every? (partial s/valid? should-be)
-                          (gen-samples spec-kw samples-num)))
-           (not ret))))                      ; Invalid args should return false.
+  :args (s/or :unary   (s/cat :n (any-or pos-int?))
+              :binary  (s/cat :should-be (any-or ::sample-spec)
+                              :n (any-or pos-int?))
+              :ternary (s/cat :spec (any-or ::sample-spec)
+                              :should-be (any-or ::sample-spec)
+                              :n (any-or pos-int?)))
+  :ret (s/or :partial fn?
+             :full boolean?)
+  :fn #(let [arity (-> % :args first)
+             ret (-> % :ret second)]
+         (if (= arity :ternary)
+           (let [spec-kw (-> % :args second :spec)
+                 spec (s/get-spec spec-kw)
+                 should-be (s/get-spec (-> % :args second :should-be))]
+             (if (and spec should-be)        ; We have valid specs so...
+               (= ret (every? (partial s/valid? should-be)
+                              (gen-samples spec-kw samples-num)))
+               (not ret)))                   ; Invalid args should return false.
+           (fn? ret))))                      ; Else should have returned a fn
