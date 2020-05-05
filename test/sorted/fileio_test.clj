@@ -1,6 +1,6 @@
 (ns sorted.fileio-test
   (:require [clojure.test :refer :all]
-            [sorted.fileio :refer :all]
+            [sorted.fileio :as file]
             [failjure.core :as f]
             [sorted.helpers :as h]))
 
@@ -15,13 +15,13 @@
     (checks? 'sorted.fileio/exists?))
   (testing "Checking if a file exists"
     (testing "returns true when the file does exist"
-      (is (exists? existent-file)))
+      (is (file/exists? existent-file)))
     (testing "returns false when the file does not exist"
-      (is (not (exists? non-existent-file))))
+      (is (not (file/exists? non-existent-file))))
     (let [error-msg (str "Error in exists?: No implementation of method: "
                          ":as-file of protocol: #'clojure.java.io/Coercions "
                          "found for class: java.lang.Long")
-          returned (exists? invalid-file)]
+          returned (file/exists? invalid-file)]
       (testing "returns an error when passed an invaldid argument"
         (is (f/failed? returned))
         (testing "with the expected error message text"
@@ -31,7 +31,7 @@
   (testing "Conforms to spec."
     (checks? 'sorted.fileio/text-read))
   (testing "Reading a known file"
-    (let [file-lines (text-read existent-file)]
+    (let [file-lines (file/text-read existent-file)]
       (testing "returns a vector"
         (is (vector? file-lines))
         (testing "containing only strings"
@@ -41,7 +41,7 @@
           file-not-found (str "Error in text-read: "
                               non-existent-file
                               " (No such file or directory)")
-          file-lines (text-read bad-file)]
+          file-lines (file/text-read bad-file)]
       (testing "returns an error"
         (is (f/failed? file-lines))
         (testing "containing a file not found message"
@@ -49,7 +49,7 @@
   (testing "Reading an invalid file name"
     (let [error-msg (str "Error in text-read: No matching ctor found for class"
                          " java.io.FileReader")
-          file-lines (text-read invalid-file)]
+          file-lines (file/text-read invalid-file)]
       (testing "returns an error"
         (is (f/failed? file-lines))
         (testing "containing an exception ojbect"
