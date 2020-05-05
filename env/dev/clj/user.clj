@@ -14,7 +14,8 @@
    [sorted.core :as c]
    [sorted.helpers :as h]
    [sorted.person :as p]
-   [sorted.fileio :as file]))
+   [sorted.fileio :as file]
+   [java-time-literals.core]))
 
 ;; KLUDGE: For some reason this can't be found on the classpath if I just
 ;;   include it in the ns statment above. It's convenient to have it aliased
