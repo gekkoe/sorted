@@ -93,16 +93,17 @@
     @people))
 
 (defn -main
-  "Expects to be passed in files delimited by a string conforming to
-  sorted.person/delim-str. Parses these files, ignoring any lines it cannot
-  parse. If a port is passed in, starts a server to display and allow input of
-  new person records. Otherwise prints out the people in the file(s), possibly
-  sorted one of three ways depending on which command line option is selected."
+  "Expects to be passed in one or more files delimited by a string conforming to
+  sorted.person/delim-str. Parses these files into person records in the atom
+  people, ignoring any lines it cannot parse. If a port is passed in, starts a
+  server to display and allow input of new person records. Otherwise prints out
+  the people in the file(s), possibly sorted one of three ways depending on
+  which command line option is selected."
   [& args]
   (let [{::keys [sort-kw files port exit-msg ok?]} (validate-args args)]
     (cond
       exit-msg (exit (if ok? 0 1) exit-msg)
-      port     (printf "User requested port %d\n" port) ; TODO: Start server
+      port     (exit 0 (format "User requested port %d\n" port)) ; TODO: Start server
       ;; Assuming we're able to load at least 1 person, display them.
       files    (if (and (load-files! files) (pos? (count @people)))
                  (->> (sort-people sort-kw)
