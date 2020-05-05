@@ -46,11 +46,11 @@
                         (filter true?)
                         count)]
     (cond
-      (:help options) ; help => exit OK with usage summary
+      help ; help => exit OK with usage summary
       {::exit-message (usage summary) ::ok? true}
       errors ; errors => exit with description of errors
       {::exit-message (error-msg errors)}
-      ;; Make sure no more than one sort option in indicated
+      ;; Make sure no more than one sort option is indicated
       (> sort-count 1)
       {::exit-message "Please select no more than one sort option."}
       (and (empty? options) (empty? arguments))
