@@ -36,7 +36,7 @@
    :project/dev   {:jvm-opts ["-Dconf=dev-config.edn"]
                    :dependencies [[org.clojure/java.classpath "1.0.0"]
                                   [java-time-literals "2018-04-06"]]
-                   :plugins []
+                   :plugins [[jonase/eastwood "0.3.5"]]
                    :source-paths ["env/dev/clj"]
                    :resource-paths ["env/dev/resources"]
                    :repl-options {:init-ns user
