@@ -47,10 +47,10 @@
         (testing "containing a file not found message"
           (is (= file-not-found (f/message file-lines)))))))
   (testing "Reading an invalid file name"
-    (let [error-msg (str "Error in text-read: No matching ctor found for class"
-                         " java.io.FileReader")
+    (let [error-msg (str "Error in text-read: java.lang.Long cannot be "
+                         "cast to java.lang.String")
           file-lines (file/text-read invalid-file)]
       (testing "returns an error"
         (is (f/failed? file-lines))
-        (testing "containing an exception ojbect"
+        (testing "containing an exception message"
           (is (= error-msg (f/message file-lines))))))))

@@ -30,5 +30,5 @@
 
 (s/fdef text-read
   :args (s/cat :file-name string?)
-  :ret (s/or :success (s/and vector? (s/coll-of string?))
+  :ret (s/or :success (s/coll-of string? :into [])
              :failure f/failed?))
