@@ -45,6 +45,7 @@
         sort-count (->> [dob gender last]
                         (filter true?)
                         count)]
+    (prn errors)
     (cond
       help ; help => exit OK with usage summary
       {::exit-msg (usage summary) ::ok? true}
@@ -131,15 +132,15 @@
   :fn #(let [summary (-> % :args :summary)
              ret (-> % :ret)]
          (and (not= summary ret)
-              (.contains ret summary))))
+              (.contains ^String ret summary))))
 
 (s/fdef error-msg
-  :args (s/cat :errors coll?)
+  :args (s/cat :errors (s/coll-of string? :into []))
   :ret string?
   :fn #(let [errors (join \newline (-> % :args :errors))
              ret (-> % :ret)]
          (and (not= errors ret)
-              (.contains ret errors))))
+              (.contains ^String ret errors))))
 
 (s/fdef validate-args
   :args (s/cat :args ::args)

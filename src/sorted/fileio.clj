@@ -8,7 +8,7 @@
   "Tests if a file exists.
   Returns an Failure object if an exception is thrown."
   [file-name]
-  (f/if-let-ok? [exists? (f/try* (.exists (io/file file-name)))]
+  (f/if-let-ok? [exists? (f/try* (.exists ^java.io.File (io/file file-name)))]
                 exists?
                 (f/fail "Error in exists?: %s" (f/message exists?))))
 
@@ -18,7 +18,7 @@
   Returns a Failure object if an exception is thrown."
   [file-name]
   (f/if-let-ok? [text (f/try* (with-open
-                                [rdr (BufferedReader. (FileReader. file-name))]
+                                [rdr (BufferedReader. (FileReader. ^String file-name))]
                                 (vec (line-seq rdr))))]
                 text
                 (f/fail "Error in text-read: %s" (f/message text))))
