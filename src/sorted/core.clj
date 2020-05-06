@@ -45,7 +45,6 @@
         sort-count (->> [dob gender last]
                         (filter true?)
                         count)]
-    (prn errors)
     (cond
       help ; help => exit OK with usage summary
       {::exit-msg (usage summary) ::ok? true}
