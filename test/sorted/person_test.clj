@@ -4,6 +4,7 @@
             [sorted.helpers :as h]
             [clojure.spec.alpha :as s]
             [java-time :as jt]
+            [java-time.local]
             [clojure.spec.gen.alpha :as gen]
             [failjure.core :as f]))
 
