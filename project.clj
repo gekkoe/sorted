@@ -7,7 +7,7 @@
                  [compojure "1.6.1"]
                  [cprop "0.1.16"]
                  [expound "0.8.4"]
-                 [http-kit "2.3.0"]
+                 [failjure "2.0.0"]
                  [liberator "0.15.3"]
                  [mount "0.1.16"]
                  [nrepl "0.7.0"]
@@ -15,14 +15,16 @@
                  [org.clojure/test.check "1.0.0"]
                  [org.clojure/tools.cli "1.0.194"]
                  [org.clojure/tools.logging "1.1.0"]
-                 [ring/ring-core "1.8.0"]
+                 [org.clojure/tools.nrepl "0.2.13"]
+                 [ring/ring-core "1.8.1"]
                  [ring/ring-defaults "0.3.2"]
-                 [failjure "2.0.0"]]
+                 [ring/ring-jetty-adapter "1.8.1"]]
 
   :target-path "target/%s/"
   :main ^:skip-aot sorted.core
 
-  :plugins []
+  :plugins [[lein-ring "0.12.5"]]
+  :ring {:handler sorted.handler/handler}
 
   :profiles
   {:uberjar {:omit-source true

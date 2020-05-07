@@ -113,6 +113,19 @@
                  (f/fail "Error in str->person: Could not parse `%s`\n%s"
                          s (f/message person)))))
 
+(defn person->un-map
+  "Expects a map that conforms to :sorted.person/person.
+  Returns a map conforming to :sorted.person/un-person.
+  Returns a Failure object if unsuccessful."
+  [p]
+  (if (s/valid? ::person p)
+    {:last-name (::last-name p)
+     :first-name (::first-name p)
+     :gender (::gender p)
+     :fav-color (::fav-color p)
+     :dob (jt/format formatter (::dob p))}
+    (f/fail "Unable to create an unqualified map representing person `%s`" p)))
+
 (defn person->str
   "Expects a map that conforms to :sorted.person/person.
   Returns a string representation of those values delimited by delim.
