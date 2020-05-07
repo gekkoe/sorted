@@ -2,12 +2,34 @@
   (:require [clojure.spec.alpha :as s]
             [clojure.tools.cli :refer [parse-opts]]
             [clojure.string :refer [join]]
+            [ring.adapter.jetty :refer [run-jetty]]
             [sorted.person :as p]
             [sorted.fileio :as file]
-            [failjure.core :as f])
+            [sorted.handler :refer [handler]]
+            [sorted.people :refer [people sorted-by]]
+            [failjure.core :as f]
+            [sorted.people :as ppl])
   (:gen-class))
 
-(def people (atom []))
+(def server (atom nil))
+
+(defn start-server!
+  ([] (start-server! 3000))
+  ([port]
+   (if @server
+     (.start @server)
+     (let [svr (run-jetty handler {:port port :join? false})]
+       (swap! server (constantly svr))))))
+
+(defn stop-server! [] (if @server
+                       (do (.stop @server)
+                           (swap! server (constantly nil)))))
+
+(defn restart-server!
+  ([] (restart-server! 3000))
+  ([port]
+   (stop-server!)
+   (start-server! port)))
 
 (def cli-options
   ;; An option with a required argument
@@ -59,10 +81,10 @@
       {::port port ::files arguments}
       (empty? arguments)
       {::exit-msg "Please provide at least one file with people records in it."}
-      :else {::sort-kw (cond dob    ::p/dob
-                             gender ::p/gender
-                             last   ::p/last-name
-                             :else  nil)
+      :else {::ppl/sort-kw (cond dob    ::p/dob
+                                 gender ::p/gender
+                                 last   ::p/last-name
+                                 :else  nil)
              ::files arguments})))
 
 (defn system-exit [status]
@@ -80,18 +102,6 @@
                               flatten
                               (remove f/failed?))))))
 
-(defn sort-people
-  [sort-kw]
-  (if-let [comparator
-           (case sort-kw
-             ::p/dob       (fn [x y] (compare [(sort-kw x) (::p/last-name x)]
-                                              [(sort-kw y) (::p/last-name y)]))
-             ::p/gender    (fn [x y] (compare (sort-kw x) (sort-kw y)))
-             ::p/last-name (fn [x y] (compare (sort-kw y) (sort-kw x)))
-             (constantly 0))] ; if no valid kw, just don't sort
-    (vec (sort comparator @people))
-    @people))
-
 (defn -main
   "Expects to be passed in one or more files delimited by a string conforming to
   sorted.person/delim-str. Parses these files into person records in the atom
@@ -103,10 +113,13 @@
   (let [{::keys [sort-kw files port exit-msg ok?]} (validate-args args)]
     (cond
       exit-msg (exit (if ok? 0 1) exit-msg)
-      port     (exit 0 (format "User requested port %d\n" port)) ; TODO: Start server
+      port     (if (and (load-files! files) (pos? (count @people)))
+                 (start-server! port)
+                 (exit 1 (format "Unable to parse any people from the file%s provided."
+                                 (if (> (count files) 1) "s" ""))))
       ;; Assuming we're able to load at least 1 person, display them.
       files    (if (and (load-files! files) (pos? (count @people)))
-                 (->> (sort-people sort-kw)
+                 (->> (sorted-by sort-kw)
                       (map #(p/person->str % " "))
                       (join \newline)
                       (exit 0))
@@ -121,9 +134,8 @@
 (s/def ::exit-msg string?)
 (s/def ::ok? boolean?)
 (s/def ::exit-instructions (s/keys :req [::exit-msg] :opt [::ok?]))
-(s/def ::sort-kw (s/nilable keyword?))
 (s/def ::files (s/coll-of string?))
-(s/def ::action-instructions (s/keys :req [::sort-kw ::files]))
+(s/def ::action-instructions (s/keys :req [::ppl/sort-kw ::files]))
 
 (s/fdef usage
   :args (s/cat :summary string?)
@@ -145,7 +157,3 @@
   :args (s/cat :args ::args)
   :ret (s/or :exit   ::exit-instructions
              :action ::action-instructions))
-
-(s/fdef sort-people
-  :args (s/cat :sort-kw ::sort-kw)
-  :ret (s/coll-of #(s/valid? ::p/person %)))

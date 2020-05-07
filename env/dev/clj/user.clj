@@ -2,6 +2,7 @@
   "Userspace functions you can run by default in your local REPL."
   (:require
    [sorted.config :refer [env]]
+   [cheshire.core :refer :all]
    [clojure.pprint]
    [clojure.spec.alpha :as s]
    [clojure.spec.gen.alpha :as gen]
@@ -12,7 +13,9 @@
    [java-time :as jt]
    #_[mount.core :as mount]
    [sorted.core :as c]
+   [sorted.handler :as handler]
    [sorted.helpers :as h]
+   [sorted.people :as ppl]
    [sorted.person :as p]
    [sorted.fileio :as file]
    [java-time-literals.core]))

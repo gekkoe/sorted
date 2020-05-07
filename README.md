@@ -30,14 +30,19 @@ provide a sane starting point for simple Clojure web apps.
   - clojure.spec.test - Testing library for specs.
   - clojure.test - Clojure's standard testing library.
   - clojure.tools.cli - Simple cli parsing.
+  - clojure.tools.logging & logback-classic - Logging.
   - compojure - A routing library for ring.
   - cprop - Facilitates pre-loading program state and properties on startup.
+  - eastwood - Code linter.
   - expound - Provides easier-to-read spec reports for use during development.
   - failjure - A monadic error handler to maintain referential integrity and
     readability.
   - http-kit - An HTTP client/server.
+  - java-time-literals - Developer convenience library for copying/pasting date
+    literals.
   - liberator - A REST library which I have some prior experience with.
   - mount - Works with cprop to support startup and shutdown state management.
+  - prone - Better exception reporting middleware for Ring.
   - ring - A web application library for Clojure.
   - test.check - Listed in the [clojure.org spec
 page](https://clojure.org/about/spec) as a generative test library that uses
@@ -45,6 +50,7 @@ clojure.spec to create better test coverage. This isn't called directly, but is
 used by clojure.spec.cen and clojure.spec.test in the development and test
 profiles.
   - tools.cli - A command line argument parser.
+  - transit-clj - For conveying values between applications written in different programming languages (supports JSON)
 
 ### Build Tools
 * This project will be using lein.

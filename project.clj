@@ -1,27 +1,30 @@
 (defproject sorted "1.0.0-SNAPSHOT"
   :description "sorted - A simple program to sort people."
 
-  :dependencies [[cheshire "5.10.0"]
+  :dependencies [[ch.qos.logback/logback-classic "1.2.3"]
+                 [cheshire "5.10.0"]
                  [clojure.java-time "0.3.2"]
                  [compojure "1.6.1"]
                  [cprop "0.1.16"]
                  [expound "0.8.4"]
-                 [http-kit "2.3.0"]
-                 ;[liberator "0.15.3"]
+                 [failjure "2.0.0"]
+                 [liberator "0.15.3"]
                  [mount "0.1.16"]
                  [nrepl "0.7.0"]
                  [org.clojure/clojure "1.10.1"]
-                 [org.clojure/spec.alpha "0.2.187"]
                  [org.clojure/test.check "1.0.0"]
                  [org.clojure/tools.cli "1.0.194"]
-                 ;[ring/ring-core "1.8.0"]
-                 ;[ring/ring-defaults "0.3.2"]
-                 [failjure "2.0.0"]]
+                 [org.clojure/tools.logging "1.1.0"]
+                 [org.clojure/tools.nrepl "0.2.13"]
+                 [ring/ring-core "1.8.1"]
+                 [ring/ring-defaults "0.3.2"]
+                 [ring/ring-jetty-adapter "1.8.1"]]
 
   :target-path "target/%s/"
   :main ^:skip-aot sorted.core
 
-  :plugins []
+  :plugins [[lein-ring "0.12.5"]]
+  :ring {:handler sorted.handler/handler}
 
   :profiles
   {:uberjar {:omit-source true
@@ -34,8 +37,11 @@
    :test          [:project/dev :project/test :profiles/test]
 
    :project/dev   {:jvm-opts ["-Dconf=dev-config.edn"]
-                   :dependencies [[org.clojure/java.classpath "1.0.0"]
-                                  [java-time-literals "2018-04-06"]]
+                   :dependencies [[java-time-literals "2018-04-06"]
+                                  [prone "2020-01-17"]
+                                  [ring/ring-devel "1.8.0"]
+                                  [ring/ring-mock "0.4.0"]]
+
                    :plugins [[jonase/eastwood "0.3.5"]]
                    :source-paths ["env/dev/clj"]
                    :resource-paths ["env/dev/resources"]
