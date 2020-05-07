@@ -30,6 +30,8 @@
 (add-tap (bound-fn* clojure.pprint/pprint))
 
 (def space-delim-file "env/dev/resources/space-delim")
+(def comma-delim-file "env/dev/resources/comma-delim")
+(def pipe-delim-file "env/dev/resources/pipe-delim")
 
 (defn -main
   [& args]
