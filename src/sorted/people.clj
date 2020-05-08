@@ -17,11 +17,11 @@
 
 (defn people->strs [ppl] (map #(p/person->str % " ") ppl))
 
-(s/def ::sort-kw (s/with-gen (s/nilable keyword?) (constantly (s/gen
-                                                               #{::p/gender
-                                                                 ::p/dob
-                                                                 ::p/last-name
-                                                                 nil}))))
+(s/def ::sort-kw (s/with-gen (s/nilable keyword?)
+                             (constantly (s/gen #{::p/gender
+                                                   ::p/dob
+                                                   ::p/last-name
+                                                   nil}))))
 
 (s/fdef sorted-by
   :args (s/cat :sort-kw ::sort-kw)
