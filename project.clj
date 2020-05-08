@@ -2,14 +2,11 @@
   :description "sorted - A simple program to sort people."
 
   :dependencies [[ch.qos.logback/logback-classic "1.2.3"]
-                 [cheshire "5.10.0"]
                  [clojure.java-time "0.3.2"]
                  [compojure "1.6.1"]
-                 [cprop "0.1.16"]
                  [expound "0.8.4"]
                  [failjure "2.0.0"]
                  [liberator "0.15.3"]
-                 [mount "0.1.16"]
                  [nrepl "0.7.0"]
                  [org.clojure/clojure "1.10.1"]
                  [org.clojure/test.check "1.0.0"]

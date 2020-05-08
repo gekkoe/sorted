@@ -1,8 +1,6 @@
 (ns user
   "Userspace functions you can run by default in your local REPL."
   (:require
-   [sorted.config :refer [env]]
-   [cheshire.core :refer :all]
    [clojure.pprint]
    [clojure.spec.alpha :as s]
    [clojure.spec.gen.alpha :as gen]
@@ -11,7 +9,6 @@
    [expound.alpha :as expound]
    [failjure.core :as f]
    [java-time :as jt]
-   #_[mount.core :as mount]
    [sorted.core :as c]
    [sorted.handler :as handler]
    [sorted.helpers :as h]
@@ -33,7 +30,7 @@
 (def comma-delim-file "env/dev/resources/comma-delim")
 (def pipe-delim-file "env/dev/resources/pipe-delim")
 
-(defn -main
+(defn main
   [& args]
   (with-redefs [sorted.core/system-exit
                 (fn [status]
@@ -63,29 +60,3 @@
   ([my-ns] (ex-check-ns my-ns 1000))
   ([my-ns num-tests]
    (expound/explain-results (check-ns my-ns num-tests))))
-
-(defn sample
-  ([spec] (sample spec 10))
-  ([spec n]
-   (gen/sample (s/gen spec) n)))
-
-(defn one-of
-  [spec]
-  (first (gen/sample (s/gen spec) 1)))
-
-#_(defn start
-  "Starts application.
-  You'll usually want to run this on startup."
-  []
-  (mount/start-without #'sorted.core/repl-server))
-
-#_(defn stop
-  "Stops application."
-  []
-  (mount/stop-except #'sorted.core/repl-server))
-
-#_(defn restart
-  "Restarts application."
-  []
-  (stop)
-  (start))
