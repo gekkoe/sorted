@@ -25,6 +25,7 @@
   as spec. If passed only n, returns a function that takes a spec and calls
   (checks? spec n)."
   ([n] (fn [spec] (checks? spec n)))
+  ;; KLUDGE: Would like to do next line without eval.
   ([spec n] (checks? (eval spec) spec n))
   ([f spec n]
    (f/if-let-ok? [attempt

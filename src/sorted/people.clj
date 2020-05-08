@@ -1,8 +1,20 @@
 (ns sorted.people
   (:require [clojure.spec.alpha :as s]
+            [failjure.core :as f]
+            [sorted.fileio :as file]
             [sorted.person :as p]))
 
 (def people (atom []))
+
+(defn load-from-files!
+  "Loads files and attempts to parse them as :sorted.person/person values and save
+  the collection of them in sorted.people/people. Ignores any lines that it
+  cannot parse."
+  [files]
+  (swap! people (fn [_] (vec (->> (map file/text-read files)
+                                  (map (partial map p/str->person))
+                                  flatten
+                                  (remove f/failed?))))))
 
 (defn sorted-by
   [sort-kw]
@@ -18,11 +30,16 @@
 (defn people->strs [ppl] (map #(p/person->str % " ") ppl))
 
 (s/def ::sort-kw (s/with-gen (s/nilable keyword?)
-                             (constantly (s/gen #{::p/gender
-                                                   ::p/dob
-                                                   ::p/last-name
-                                                   nil}))))
+                   (constantly (s/gen #{::p/gender
+                                        ::p/dob
+                                        ::p/last-name
+                                        nil}))))
 
 (s/fdef sorted-by
   :args (s/cat :sort-kw ::sort-kw)
   :ret (s/coll-of ::p/person :into []))
+
+(s/fdef load-from-files!
+  :args (s/cat :files (s/coll-of string? :into []))
+  :ret (s/or :success (s/coll-of ::p/person :into [])
+             :failure f/failed?))

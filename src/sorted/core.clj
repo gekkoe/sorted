@@ -19,11 +19,9 @@
    (if @server
      (.start @server)
      (let [svr (run-jetty handler {:port port :join? false})]
-       (swap! server (constantly svr))))))
+       (reset! server svr)))))
 
-(defn stop-server! [] (if @server
-                       (do (.stop @server)
-                           (swap! server (constantly nil)))))
+(defn stop-server! [] (if @server (do (.stop @server) (reset! server nil))))
 
 (defn restart-server!
   ([] (restart-server! 3000))
@@ -58,9 +56,8 @@
        (join \newline errors)))
 
 (defn validate-args
-  "Validate command line arguments. Either return a map indicating the program
-  should exit (with a error message, and optional ok status), or a map
-  indicating the order to sort output and the files for input."
+  "Validate command line. Either return a map indicating the program should
+  exit (with a error message, and optional ok status), or a map of instructions."
   [args]
   (let [{:keys [options arguments errors summary]} (parse-opts args cli-options)
         {:keys [help dob gender last port]} options
@@ -94,13 +91,13 @@
   (println msg)
   (system-exit status))
 
-(defn load-files!
-  [files]
-  (swap! people (fn [_] (vec
-                         (->> (map file/text-read files)
-                              (map (partial map p/str->person))
-                              flatten
-                              (remove f/failed?))))))
+(defn display-people-and-exit
+  "Outputs sorted list of sorted.people/people and exits app."
+  [sort-kw]
+  (->> (sorted-by sort-kw)
+       (map #(p/person->str % " "))
+       (join \newline)
+       (exit 0)))
 
 (defn -main
   "Expects to be passed in one or more files delimited by a string conforming to
@@ -111,20 +108,14 @@
   which command line option is selected."
   [& args]
   (let [{::keys [sort-kw files port exit-msg ok?]} (validate-args args)]
-    (cond
-      exit-msg (exit (if ok? 0 1) exit-msg)
-      port     (if (and (load-files! files) (pos? (count @people)))
-                 (start-server! port)
-                 (exit 1 (format "Unable to parse any people from the file%s provided."
-                                 (if (> (count files) 1) "s" ""))))
-      ;; Assuming we're able to load at least 1 person, display them.
-      files    (if (and (load-files! files) (pos? (count @people)))
-                 (->> (sorted-by sort-kw)
-                      (map #(p/person->str % " "))
-                      (join \newline)
-                      (exit 0))
-                 (exit 1 (format "Unable to parse any people from the file%s provided."
-                                 (if (> (count files) 1) "s" "")))))))
+    (if exit-msg
+      (exit (if ok? 0 1) exit-msg)
+      (if (and (ppl/load-from-files! files) (pos? (count @people)))
+        (if port
+          (start-server! port)
+          (display-people-and-exit sort-kw))
+        (exit 1 (format "Unable to parse any people from the file%s provided."
+                        (if (> (count files) 1) "s" "")))))))
 
 ;;;============================================================================
 ;;;                              S P E C S
@@ -135,7 +126,8 @@
 (s/def ::ok? boolean?)
 (s/def ::exit-instructions (s/keys :req [::exit-msg] :opt [::ok?]))
 (s/def ::files (s/coll-of string?))
-(s/def ::action-instructions (s/keys :req [::ppl/sort-kw ::files]))
+(s/def ::port (s/& int? #(< 0 % 0x10000)))
+(s/def ::actions (s/keys :req [::files] :opt [::ppl/sort-kw ::port]))
 
 (s/fdef usage
   :args (s/cat :summary string?)
@@ -156,4 +148,4 @@
 (s/fdef validate-args
   :args (s/cat :args ::args)
   :ret (s/or :exit   ::exit-instructions
-             :action ::action-instructions))
+             :action ::actions))
