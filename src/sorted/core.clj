@@ -2,32 +2,14 @@
   (:require [clojure.spec.alpha :as s]
             [clojure.tools.cli :refer [parse-opts]]
             [clojure.string :refer [join]]
-            [ring.adapter.jetty :refer [run-jetty]]
             [sorted.person :as p]
             [sorted.fileio :as file]
             [sorted.handler :refer [handler]]
             [sorted.people :refer [people sorted-by]]
+            [sorted.server :refer [start-server!]]
             [failjure.core :as f]
             [sorted.people :as ppl])
   (:gen-class))
-
-(def server (atom nil))
-
-(defn start-server!
-  ([] (start-server! 3000))
-  ([port]
-   (if @server
-     (.start @server)
-     (let [svr (run-jetty handler {:port port :join? false})]
-       (reset! server svr)))))
-
-(defn stop-server! [] (if @server (do (.stop @server) (reset! server nil))))
-
-(defn restart-server!
-  ([] (restart-server! 3000))
-  ([port]
-   (stop-server!)
-   (start-server! port)))
 
 (def cli-options
   ;; An option with a required argument
