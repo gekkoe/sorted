@@ -21,7 +21,7 @@ about them.
 * I've also looked to [luminusweb.com](http://luminusweb.com) for example code
 of how to set up portions of this project. I've found in the past that they
 provide a sane starting point for simple Clojure web apps. That said, they tend
-to put in quite a bit more than I need for this project in their baseline
+to put quite a bit more than I need for this project in their baseline
 templates, so I've only used a few ideas from them here.
 * The following will be used for this project:
   - clojure.java-time - A Java 8+ Date-Time API wrapper library.
