@@ -6,6 +6,7 @@
                  [compojure "1.6.1"]
                  [expound "0.8.4"]
                  [failjure "2.0.0"]
+                 [hiccup "1.0.5"]
                  [liberator "0.15.3"]
                  [nrepl "0.7.0"]
                  [org.clojure/clojure "1.10.1"]
