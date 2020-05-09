@@ -29,7 +29,7 @@
 
 (deftest text-read-test
   (testing "Conforms to spec."
-    (checks? 'sorted.fileio/text-read))
+    (is (checks? 'sorted.fileio/text-read)))
   (testing "Reading a known file"
     (let [file-lines (file/text-read existent-file)]
       (testing "returns a vector"
