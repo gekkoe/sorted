@@ -5,6 +5,7 @@
             [sorted.person :as p]))
 
 (def people (atom []))
+(def post-limit 10000) ; Used to limit online posts to people
 
 (defn load-from-files!
   "Loads files and attempts to parse them as :sorted.person/person values and save
