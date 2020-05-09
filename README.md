@@ -99,3 +99,5 @@ text line containing one to be an invalid entry.
 * There are a couple of minor kludges that have been left in the code, since
 figuring them out seemed a bit off-path. It would be nice to learn better ways
 to approach these things, so I've labeled them for later consideration.
+* I decided to put in rudimentary sanity checks by not allowing more than a max
+number of entries in the list and blocking duplicate entries.
