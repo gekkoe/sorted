@@ -108,7 +108,7 @@
 (s/def ::ok? boolean?)
 (s/def ::exit-instructions (s/keys :req [::exit-msg] :opt [::ok?]))
 (s/def ::files (s/coll-of string?))
-(s/def ::port (s/& int? #(< 0 % 0x10000)))
+(s/def ::port (s/and int? #(< 0 % 0x10000)))
 (s/def ::actions (s/keys :req [::files] :opt [::ppl/sort-kw ::port]))
 
 (s/fdef usage
