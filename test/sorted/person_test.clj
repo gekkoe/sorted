@@ -208,3 +208,18 @@
                     "\"something\", :b [\"xyz\"], :sorted.person/fav-color 9}` "
                     "is not a valid :sorted.person/person.")
                (f/message ret)))))))
+
+(deftest person->un-person-test
+  (testing "Conforms to spec."
+    (is (checks? 'sorted.person/person->un-person)))
+  (testing "Returns a valid un-person when given good args"
+    (is (s/valid? ::p/un-person (p/person->un-person valid-person))))
+  (testing "Returns a Failure object when given bad args"
+    (let [ret (p/person->un-person invalid-person)]
+      (is (f/failed? ret))
+      (testing "containing the expected error message"
+        (is (= (str "Error in person->un-person: Unable to create an "
+                    "unqualified map representing person `{:a 3, "
+                    ":sorted.person/last-name \"something\", :b [\"xyz\"], "
+                    ":sorted.person/fav-color 9}`")
+               (f/message ret)))))))

@@ -114,9 +114,9 @@
                  (f/fail "Error in str->person: Could not parse `%s`\n%s"
                          s (f/message person)))))
 
-(defn person->un-map
-  "Expects a map that conforms to :sorted.person/person.
-  Returns a map conforming to :sorted.person/un-person.
+(defn person->un-person
+  "Expects a :sorted.person/person.
+  Returns a :sorted.person/un-person.
   Returns a Failure object if unsuccessful."
   [p]
   (if (s/valid? ::person p)
@@ -124,8 +124,9 @@
      :first-name (::first-name p)
      :gender (::gender p)
      :fav-color (::fav-color p)
-     :dob (jt/format formatter (::dob p))}
-    (f/fail "Unable to create an unqualified map representing person `%s`" p)))
+     :birthdate (jt/format formatter (::dob p))}
+    (f/fail (str "Error in person->un-person: Unable to create an "
+                 "unqualified map representing person `%s`") p)))
 
 (defn person->str
   "Expects a map that conforms to :sorted.person/person.
@@ -181,8 +182,11 @@
 (s/def ::gender ::no-delim-str)
 (s/def ::fav-color ::no-delim-str)
 (s/def ::dob ::date)
+(s/def ::birthdate ::date-str)
 (s/def ::person
   (s/keys :req [::first-name ::last-name ::gender ::fav-color ::dob]))
+(s/def ::un-person
+  (s/keys :req-un [::first-name ::last-name ::gender ::fav-color ::birthdate]))
 (s/def ::person-strs
   (s/tuple ::first-name ::last-name ::gender ::fav-color ::date-str))
 (s/def ::person-vals
@@ -276,3 +280,8 @@
              p (-> % :args :p)]
          (or (f/failed? ret)
              (= (str->person ret) p))))
+
+(s/fdef person->un-person
+  :args (s/cat :p (h/any-or ::person))
+  :ret (s/or :success ::un-person
+             :failure f/failed?))
