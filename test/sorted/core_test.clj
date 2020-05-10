@@ -19,8 +19,3 @@
 (deftest validate-args-test
   (testing "Conforms to spec."
     (is (checks? 'sorted.core/validate-args))))
-
-(deftest exit-test
-  (with-redefs [c/system-exit identity]
-    (testing "Calls System/exit with status as an arg"
-      (is (= 42 (c/exit 42 "Exit called from tests with status 42."))))))

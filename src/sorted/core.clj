@@ -1,6 +1,7 @@
 (ns sorted.core
   (:require [clojure.spec.alpha :as s]
             [clojure.tools.cli :refer [parse-opts]]
+            [clojure.tools.logging :as log]
             [clojure.string :refer [join]]
             [failjure.core :as f]
             [sorted.person :as p]
@@ -69,6 +70,8 @@
 
 (defn exit [status msg]
   (println msg)
+  (when-not (zero? status)
+    (log/error msg))
   (system-exit status))
 
 (defn display-people-and-exit
