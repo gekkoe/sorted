@@ -103,8 +103,9 @@
 (s/def ::sample-fn (s/with-gen any? #(gen/one-of [(gen/return (constantly 42))
                                                   (gen/return inc)])))
 
-(defn- fail-str [_] (when (odd? (rand-int 2)) (f/fail "f failed"))) ; Fail half the time
-(defn- fail-num [_] (if (odd? (rand-int 2)) 8 (f/fail 9))) ; Test numeric fail as well
+;; Some test fns that fail half the time
+(defn- fail-str [_] (when (odd? (rand-int 2)) (f/fail "f failed")))
+(defn- fail-num [_] (if (odd? (rand-int 2)) 8 (f/fail 9)))
 (s/def ::failjure-fn (s/with-gen any? #(gen/one-of [(gen/return (constantly 42))
                                                     (gen/return fail-str)
                                                     (gen/return fail-num)])))
