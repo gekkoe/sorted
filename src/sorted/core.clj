@@ -55,10 +55,10 @@
       {::exit-msg "Please select no more than one sort option."}
       (and (empty? options) (empty? arguments))
       {::exit-msg (usage summary)}
+      (empty? arguments)
+      {::exit-msg "Please provide at least one file with person records in it."}
       port ; port => start the server on indicated port
       {::port port ::files arguments}
-      (empty? arguments)
-      {::exit-msg "Please provide at least one file with people records in it."}
       :else {::ppl/sort-kw (cond dob    ::p/dob
                                  gender ::p/gender
                                  last   ::p/last-name
@@ -74,21 +74,21 @@
     (log/error msg))
   (system-exit status))
 
-(defn display-people-and-exit
-  "Outputs sorted list of sorted.people/people and exits app."
+(defn sorted-people-str
+  "Passed a :sorted.people/sort-kw, sorts the people list by the kw, then returns
+  a string conataining the sorted list."
   [sort-kw]
   (->> (ppl/sorted-by sort-kw)
        (map #(p/person->str % " "))
-       (join \newline)
-       (exit 0)))
+       (join \newline)))
 
 (defn -main
   "Expects to be passed in one or more files delimited by a string conforming to
-  sorted.person/delim-str. Parses these files into person records in the atom
-  people, ignoring any lines it cannot parse. If a port is passed in, starts a
-  server to display and allow input of new person records. Otherwise prints out
-  the people in the file(s), possibly sorted one of three ways depending on
-  which command line option is selected."
+  sorted.person/delim-str. Parses these files into person records in
+  sorted.people/people, ignoring any lines it cannot parse. If a port is passed
+  in, starts a server to display and allow input of new person records.
+  Otherwise prints out the people in the file(s), possibly sorted one of three
+  ways depending on which command line option is selected."
   [& args]
   (let [{::keys [sort-kw files port exit-msg ok?]} (validate-args args)]
     (if exit-msg
@@ -97,7 +97,7 @@
         (if port
           (do (printf "Server started on port %d.\nLogging to log/sorted.log." port)
               (svr/start-server! port))
-          (display-people-and-exit sort-kw))
+          (exit 0 (sorted-people-str sort-kw)))
         (exit 1 (format "Unable to parse any people from the file%s provided."
                         (if (> (count files) 1) "s" "")))))))
 
@@ -133,3 +133,7 @@
   :args (s/cat :args ::args)
   :ret (s/or :exit   ::exit-instructions
              :action ::actions))
+
+(s/fdef sorted-people-str
+  :args ::ppl/sort-kw
+  :ret string?)
