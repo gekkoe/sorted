@@ -45,7 +45,7 @@
                    :resource-paths ["env/dev/resources"]
                    :repl-options {:init-ns user
                                   :timeout 120000}
-                   :injections []}
+                   :injections [(.. System (setProperty "prone.enabled" "true"))]}
 
    :project/test  {:jvm-opts ["-Dconf=test-config.edn"]
                    :resource-paths ["env/test/resources"]}

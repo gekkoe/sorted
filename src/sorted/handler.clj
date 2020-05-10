@@ -7,6 +7,7 @@
             [failjure.core :as f]
             [hiccup.core :refer [html]]
             [liberator.core :refer [resource defresource]]
+            [prone.middleware :as prone]
             [sorted.helpers :as h]
             [sorted.person :as p]
             [sorted.people :as ppl])
@@ -172,7 +173,10 @@
   (GET "/records/name" [] (sorted-resource ::p/last-name))
   (not-found (html [:p "Page not found." site-map]) ))
 
-(def handler app)
+(def prone-enabled? (= "true" (System/getProperty "prone.enabled")))
+(def handler
+  (cond-> app
+    prone-enabled? prone/wrap-exceptions))
 
 ;;;============================================================================
 ;;;                              S P E C S
