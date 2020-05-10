@@ -5,9 +5,8 @@
             [failjure.core :as f]
             [sorted.person :as p]
             [sorted.fileio :as file]
-            [sorted.handler :refer [handler]]
             [sorted.people :as ppl]
-            [sorted.server :refer [start-server!]])
+            [sorted.server :as svr])
   (:gen-class))
 
 (def cli-options
@@ -93,7 +92,8 @@
       (exit (if ok? 0 1) exit-msg)
       (if (and (ppl/load-from-files! files) (pos? (count @ppl/people)))
         (if port
-          (start-server! port)
+          (do (printf "Server started on port %d.\nLogging to log/sorted.log." port)
+              (svr/start-server! port))
           (display-people-and-exit sort-kw))
         (exit 1 (format "Unable to parse any people from the file%s provided."
                         (if (> (count files) 1) "s" "")))))))
