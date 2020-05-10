@@ -14,6 +14,7 @@
                  [org.clojure/tools.cli "1.0.194"]
                  [org.clojure/tools.logging "1.1.0"]
                  [org.clojure/tools.nrepl "0.2.13"]
+                 [prone "2020-01-17"]
                  [ring/ring-core "1.8.1"]
                  [ring/ring-defaults "0.3.2"]
                  [ring/ring-jetty-adapter "1.8.1"]]
@@ -36,7 +37,6 @@
 
    :project/dev   {:jvm-opts ["-Dconf=dev-config.edn"]
                    :dependencies [[java-time-literals "2018-04-06"]
-                                  [prone "2020-01-17"]
                                   [ring/ring-devel "1.8.0"]
                                   [ring/ring-mock "0.4.0"]]
 
