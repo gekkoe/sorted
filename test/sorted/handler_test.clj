@@ -64,15 +64,12 @@
   (testing "Returns true if request method is post and content-types "))
 
 (deftest parse-person-str-test
-  (with-redefs [ppl/people (atom [person1 person2])]
-    (testing "Conforms to spec."
-      (is (checks? 'sorted.handler/parse-person-str)))))
+  (testing "Conforms to spec."
+    (is (checks? 'sorted.handler/parse-person-str))))
 
 (deftest post-person!-test
     (testing "Conforms to spec."
-      (is
-       (with-redefs [ppl/people (atom [person1 person2])]
-       (checks? 'sorted.handler/post-person!)))))
+      (is (checks? 'sorted.handler/post-person!))))
 
 (deftest sorted-people-test
   (testing "Conforms to spec."
