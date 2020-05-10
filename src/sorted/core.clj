@@ -2,13 +2,12 @@
   (:require [clojure.spec.alpha :as s]
             [clojure.tools.cli :refer [parse-opts]]
             [clojure.string :refer [join]]
+            [failjure.core :as f]
             [sorted.person :as p]
             [sorted.fileio :as file]
             [sorted.handler :refer [handler]]
-            [sorted.people :refer [people sorted-by]]
-            [sorted.server :refer [start-server!]]
-            [failjure.core :as f]
-            [sorted.people :as ppl])
+            [sorted.people :as ppl]
+            [sorted.server :refer [start-server!]])
   (:gen-class))
 
 (def cli-options
@@ -76,7 +75,7 @@
 (defn display-people-and-exit
   "Outputs sorted list of sorted.people/people and exits app."
   [sort-kw]
-  (->> (sorted-by sort-kw)
+  (->> (ppl/sorted-by sort-kw)
        (map #(p/person->str % " "))
        (join \newline)
        (exit 0)))
@@ -92,7 +91,7 @@
   (let [{::keys [sort-kw files port exit-msg ok?]} (validate-args args)]
     (if exit-msg
       (exit (if ok? 0 1) exit-msg)
-      (if (and (ppl/load-from-files! files) (pos? (count @people)))
+      (if (and (ppl/load-from-files! files) (pos? (count @ppl/people)))
         (if port
           (start-server! port)
           (display-people-and-exit sort-kw))
