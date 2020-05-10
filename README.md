@@ -4,6 +4,18 @@ sorted - A simple program to sort people.
 Implementation Decisions
 -----------------------------
 
+### Running the Program
+The Linux executable version of this program is called __sorted.run__ and can be
+downloaded from the lastest [release](https://github.com/gekkoe/sorted/releases)
+To see the command-line options and usage fun `sorted.run --help` If it needs to
+be run on a different platform, the __sorted.jar__ file can be built using `lein
+uberjar` anywhere within the project. This will build a self-contained jar file
+under $PROJECTROOT/target/uberjar that can be run using the command `java -jar
+sorted.jar OptionsAndFilesHere` or it can be turned into a GraalVM fallback
+executable that is smaller but still requires a java installation by using
+graal's native-image program on the jar file, preferably with the
+_--initialize-at-build-time_ flag set.
+
 ### Language Choice
 * Though not stated directly in the specifications, the implication that Clojure
 would be the best choice here seems clear. It is an excellent language for this
@@ -56,8 +68,8 @@ profiles.
 build fine in any other properly configured Clojure development environment.
 * To create a self-contained executable for the releases I'm using a script that
 can be concatinated with a jar file and runs it, passing in any commands given.
-The file name of the executable is _sorted.run_ and it can be rebuilt using the
-shell command _build-executable.sh_ in the project's root.
+The file name of the executable is __sorted.run__ and it can be rebuilt using the
+shell command __build-executable.sh__ in the project's root.
 * I've been able to build a "fallback" version of an executable using GraalVM,
 but since I haven't been able to get its native-image to run without resorting
 to a fallback and I'm not certain how well such a file will work in various run
@@ -65,7 +77,7 @@ environments, I've decided not to use it for executable at this time. It does,
 however, look like a very promising way to handle such things in the future,
 once I better understand their system.
 
-### Design Choices & Things Learned
+### Design Decisions & Things Learned
 * This has been my first real exposure to spec and generative testing. It took a
 little getting used to at first, but I'm quite impressed with the compliance
 testing that they allow, and have used them to weed out some unexpected edge
@@ -101,3 +113,13 @@ figuring them out seemed a bit off-path. It would be nice to learn better ways
 to approach these things, so I've labeled them for later consideration.
 * I decided to put in rudimentary sanity checks by not allowing more than a max
 number of entries in the list and blocking duplicate entries.
+* After quite a bit of development in the handler code, I realized that a
+simpler approach would have worked. It turns out that liberator drops namespaces
+from keywords when rendering qualified maps to JSON. Having not dealt with
+qualified keywords much prior to learning spec, I had not tried them with
+liberator before, and made an incorrect assumption. While fixing this would
+remove a bit of complexity and would not be particularly difficult to do, I've
+decided to leave the current version for demo purposes, as there were a number
+of interesting problems to solve in the process, and such code would be useful
+under somewhat different circumstances. If this were going to be production code
+though, I would certainly look to rewrite that part for added simplicity.
