@@ -44,9 +44,9 @@ templates, so I've only used a few ideas from them here.
   - prone - Better exception reporting middleware for Ring.
   - ring - A web application library for Clojure.
   - test.check - Listed in the [clojure.org spec
-page](https://clojure.org/about/spec) as a generative test library that uses
+page](https://clojure.org/about/spec) as a generative test library that allows
 clojure.spec to create better test coverage. This isn't called directly, but is
-used by clojure.spec.cen and clojure.spec.test in the development and test
+used by clojure.spec.gen and clojure.spec.test in the development and test
 profiles.
   - tools.cli - A command line argument parser.
 
@@ -55,15 +55,15 @@ profiles.
 * I'll be coding the project in Emacs with Spacemacs, but it should open and
 build fine in any other properly configured Clojure development environment.
 * To create a self-contained executable for the releases I'm using a script that
-  can be concatinated with a jar file and runs it, passing in any commands
-  given. The file name of the executable is _sorted.run_ and it can be rebuilt
-  using the shell command _build-executable.sh_ in the project's root.
+can be concatinated with a jar file and runs it, passing in any commands given.
+The file name of the executable is _sorted.run_ and it can be rebuilt using the
+shell command _build-executable.sh_ in the project's root.
 * I've been able to build a "fallback" version of an executable using GraalVM,
-  but since I haven't been able to get its native-image to run without resorting
-  to a fallback and I'm not certain how well such a file will work in various
-  run environments, I've decided not to use it for executable at this time. It
-  does, however, look like a very promising way to handle such things in the
-  future, once I better understand their system.
+but since I haven't been able to get its native-image to run without resorting
+to a fallback and I'm not certain how well such a file will work in various run
+environments, I've decided not to use it for executable at this time. It does,
+however, look like a very promising way to handle such things in the future,
+once I better understand their system.
 
 ### Design Choices & Things Learned
 * This has been my first real exposure to spec and generative testing. It took a
