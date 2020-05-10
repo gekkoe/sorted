@@ -37,6 +37,10 @@
   (testing "Conforms to spec."
     (is (checks? 'sorted.helpers/gen-samples))))
 
+(deftest ok-map-test
+  (testing "Conforms to spec."
+    (is (checks? 'sorted.helpers/ok-map))))
+
 (deftest verified?-test
   (testing "Conforms to spec."
     (is (checks? 'sorted.helpers/verified?))))

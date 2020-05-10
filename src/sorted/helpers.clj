@@ -63,6 +63,19 @@
               spec n (f/message samples)))
      (f/fail "Error in gen-samples: `%s` is not a valid spec." spec))))
 
+(defn ok-map
+  "Monadic map for failjure-aware functions. Attempts to map f, a function taking
+  one argument that returns a Failure object upon failure, over xs. Short
+  circuits if anything fails. Returns a new collection, or a Failure object."
+  [f xs]
+  (try
+    (letfn [(f' [x y] (f/if-let-ok? [n (f y)]
+                                    (conj x n)
+                                    (throw (Exception. (str (f/message n))))))]
+      (reduce f' [] xs))
+    (catch Exception e
+      (f/fail (f/message e)))))
+
 (defn verified?
   "Returns true if every one of n generated samples of spec is a valid should-be.
   If passed only n, returns a function that takes spec and should-be and
@@ -90,6 +103,12 @@
 (s/def ::sample-fn (s/with-gen any? #(gen/one-of [(gen/return (constantly 42))
                                                   (gen/return inc)])))
 
+(defn- fail-str [_] (when (odd? (rand-int 2)) (f/fail "f failed"))) ; Fail half the time
+(defn- fail-num [_] (if (odd? (rand-int 2)) 8 (f/fail 9))) ; Test numeric fail as well
+(s/def ::failjure-fn (s/with-gen any? #(gen/one-of [(gen/return (constantly 42))
+                                                    (gen/return fail-str)
+                                                    (gen/return fail-num)])))
+
 (def ^:private samples-num 500)
 
 (s/fdef any-or
@@ -115,6 +134,11 @@
               :binary (s/cat :spec (any-or ::sample-spec) :n (any-or pos-int?)))
   :ret (s/or :partial fn?
              :success coll?
+             :failure f/failed?))
+
+(s/fdef ok-map
+  :args (s/cat :f ::failjure-fn :xs sequential?)
+  :ret (s/or :success vector?
              :failure f/failed?))
 
 (s/fdef verified?
