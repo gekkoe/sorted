@@ -14,7 +14,7 @@
   ;; An option with a required argument
   [["-p" "--port PORT" "Port number. If not specified, doesn't start server."
     :parse-fn #(Integer/parseInt %)
-    :validate [#(< 0 % 0x10000) "Must be a number between 0 and 65536"]]
+    :validate [#(< 1023 % 49152) "Must be a number between 1024 and 49151"]]
    ["-d" "--dob" "Sort output by date of birth, ascending."]
    ["-g" "--gender" "Sort by gender, female first, then by last name ascending."]
    ["-l" "--last" "Sort output by last name, descending."]
@@ -59,10 +59,10 @@
       {::exit-msg "Please provide at least one file with person records in it."}
       port ; port => start the server on indicated port
       {::port port ::files arguments}
-      :else {::ppl/sort-kw (cond dob    ::p/dob
-                                 gender ::p/gender
-                                 last   ::p/last-name
-                                 :else  nil)
+      :else {::sort-kw (cond dob    ::p/dob
+                             gender ::p/gender
+                             last   ::p/last-name
+                             :else  nil)
              ::files arguments})))
 
 (defn system-exit [status]
@@ -95,7 +95,8 @@
       (exit (if ok? 0 1) exit-msg)
       (if (and (ppl/load-from-files! files) (pos? (count @ppl/people)))
         (if port
-          (do (printf "Server started on port %d.\nLogging to log/sorted.log." port)
+          (do (printf "Server started on port %d.\nLogging to log/sorted.log.\n"
+                      port)
               (svr/start-server! port))
           (exit 0 (sorted-people-str sort-kw)))
         (exit 1 (format "Unable to parse any people from the file%s provided."

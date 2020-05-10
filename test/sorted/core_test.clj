@@ -118,7 +118,7 @@
       (testing "containing the expected file(s)"
         (is (= ["somefile"] (::c/files result))))
       (testing "containing the expected sort-kw"
-        (is (= ::p/gender (::ppl/sort-kw result)))))))
+        (is (= ::p/gender (::c/sort-kw result)))))))
 
 (deftest sorted-people-str-test
   (testing "Conforms to spec"
