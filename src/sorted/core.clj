@@ -97,6 +97,7 @@
         (if port
           (do (printf "Server started on port %d.\nLogging to log/sorted.log.\n"
                       port)
+              (flush) ; The compiled jar refused to print the above line so...
               (svr/start-server! port))
           (exit 0 (sorted-people-str sort-kw)))
         (exit 1 (format "Unable to parse any people from the file%s provided."
