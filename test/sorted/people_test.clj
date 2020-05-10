@@ -24,13 +24,13 @@
     (testing "Loads expected people, ignoring bad records."
       (is (= (butlast test-file) (ppl/people->strs result))))))
 
-  (deftest sorted-by-test
-      (testing "Conforms to spec."
-        (is (checks? 'sorted.people/sorted-by)))
-    (with-redefs [ppl/people (atom (mapv p/str->person (butlast test-file)))]
-      (testing "Properly sorts people by date of birth (then last name)"
-        (is (= [sam june jane john] (ppl/people->strs (ppl/sorted-by ::p/dob)))))
-      (testing "Properly sorts by gender"
-        (is (= [jane june john sam] (ppl/people->strs (ppl/sorted-by ::p/gender)))))
-      (testing "Properly sorts by last name (desc)"
-        (is (= [sam jane john june] (ppl/people->strs (ppl/sorted-by ::p/last-name)))))))
+(deftest sorted-by-test
+  (testing "Conforms to spec."
+    (is (checks? 'sorted.people/sorted-by)))
+  (with-redefs [ppl/people (atom (mapv p/str->person (butlast test-file)))]
+    (testing "Properly sorts people by date of birth (then last name)"
+      (is (= [sam june jane john] (ppl/people->strs (ppl/sorted-by ::p/dob)))))
+    (testing "Properly sorts by gender"
+      (is (= [jane june john sam] (ppl/people->strs (ppl/sorted-by ::p/gender)))))
+    (testing "Properly sorts by last name (desc)"
+      (is (= [sam jane john june] (ppl/people->strs (ppl/sorted-by ::p/last-name)))))))
