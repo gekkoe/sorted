@@ -6,7 +6,6 @@
             [sorted.person :as p]
             [clojure.spec.alpha :as s]))
 
-
 (def num-tests 1000)    ; Number of times to check function specs.
 (def checks? (h/checks? num-tests))
 (def num-samples 1000)
@@ -20,8 +19,9 @@
                          :request-method :post}})
 
 (s/def ::non-post (s/and simple-keyword? #(not= :post %)))
-;(s/def ::non-post (s/with-gen simple-keyword? #(s/gen #{:post})))
 (s/def ::any any?)
+(def non-post-ctx-list (map (fn [x] {:request {:request-method x}}) (samples ::non-post)))
+(def post-ctx {:request {:request-method :post}})
 
 (deftest strs->html-test
   (testing "Conforms to spec."
@@ -40,25 +40,47 @@
   (with-redefs [ppl/people (atom [person1])]
     (testing "Conforms to spec."
       (is (checks? 'sorted.handler/already-exists?)))
-    (testing "Returns truthy vector when sorted.people/people contains a dup"
+    (testing "Returns expected vector when sorted.people/people contains a dup"
       (is (= [true {:message "Record for this person already exists."}]
-             (handler/already-exists? {::handler/data person1}))))
+             (handler/already-exists? {::handler/person person1}))))
     (testing "Returns logical false when sorted.people/people has no dup"
-      (is (not (handler/already-exists? {::handler/data person2}))))))
+      (is (not (handler/already-exists? {::handler/person person2}))))))
 
 (deftest posting?-test
   (testing "Conforms to spec."
     (is (checks? 'sorted.handler/posting?)))
   (testing "Returns true if request method is :post"
-    (is (handler/posting? {:request {:request-method :post}})))
+    (is (handler/posting? post-ctx)))
   (testing "Returns logical false if request method is anything but post"
-    (is (not-any? true? (map handler/posting? (map (fn [x] {:request {:request-method x}})
-                                                   (samples ::non-post)))))))
+    (is (not-any? true? (map handler/posting? non-post-ctx-list)))))
 
 (deftest check-content-type-test
   (testing "Conforms to spec."
-    (is (checks? 'sorted.handler/check-content-type))))
+    (is (checks? 'sorted.handler/check-content-type)))
+  (testing "Returns true if request method is not post regardless of content-types"
+    (is (every? true? (map handler/check-content-type
+                           non-post-ctx-list
+                           (samples ::handler/content-types)))))
+  (testing "Returns true if request method is post and content-types "))
 
 (deftest parse-person-str-test
+  (with-redefs [ppl/people (atom [person1 person2])]
+    (testing "Conforms to spec."
+      (is (checks? 'sorted.handler/parse-person-str)))))
+
+(deftest post-person!-test
+    (testing "Conforms to spec."
+      (is
+       (with-redefs [ppl/people (atom [person1 person2])]
+       (checks? 'sorted.handler/post-person!)))))
+
+(deftest sorted-people-test
   (testing "Conforms to spec."
-    (is (checks? 'sorted.handler/parse-person-str))))
+    (is (checks? 'sorted.handler/sorted-people)))
+  (testing "Produces expected results when passed good args"
+    (with-redefs [ppl/people (atom [person1 person2])]
+      (is (= [(p/person->un-person person2)
+              (p/person->un-person person1)]
+             (-> (handler/sorted-people ::p/gender)
+                 ::handler/un-people
+                 :records))))))
