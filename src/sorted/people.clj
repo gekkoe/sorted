@@ -14,8 +14,7 @@
   to parse them as :sorted.person/person values and save the collection of them
   in sorted.people/people. Ignores any lines that it cannot parse."
   [files]
-  (reset! people (->> (map file/text-read files)
-                      flatten
+  (reset! people (->> (mapcat file/text-read files)
                       (map p/str->person)
                       (remove f/failed?)
                       vec)))
@@ -24,10 +23,10 @@
   [sort-kw]
   (when-let [comparator
              (case sort-kw
+               ::p/gender    (fn [x y] (compare  (sort-kw x) (sort-kw y)))
+               ::p/last-name (fn [x y] (compare  (sort-kw y) (sort-kw x)))
                ::p/dob       (fn [x y] (compare [(sort-kw x) (::p/last-name x)]
-                                                [(sort-kw y) (::p/last-name y)]))
-               ::p/gender    (fn [x y] (compare (sort-kw x) (sort-kw y)))
-               ::p/last-name (fn [x y] (compare (sort-kw y) (sort-kw x)))
+                                               [(sort-kw y) (::p/last-name y)]))
                (constantly 0))] ; if no valid kw, just don't sort
     (vec (sort comparator @people))))
 

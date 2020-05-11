@@ -152,7 +152,7 @@
   :ret (s/or :partial fn?
              :full boolean?)
   :fn #(let [arity (-> % :args first)
-             ret (-> % :ret second)]
+             ret   (-> % :ret second)]
          (if (= arity :ternary)
            (let [spec-kw (-> % :args second :spec)
                  spec (s/get-spec spec-kw)
