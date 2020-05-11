@@ -23,16 +23,14 @@
 (def unsorted-ps [person1 person2 person3])
 
 (def usage-summary
-  (str "sorted - A simple program for sorting people.\n\nUsage: "
-       "sorted [options] file1 file2 file3 ...\n\nOptions:\n  -p, "
-       "--port PORT  Port number. If not specified, doesn't start "
-       "server.\n  -d, --dob        Sort output by date of birth, "
-       "ascending.\n  -g, --gender     Sort by gender, female "
-       "first, then by last name ascending.\n  -l, --last       "
-       "Sort output by last name, descending.\n  -h, --help       "
-       "Prints this help text...\n\nThis program can support more "
-       "than 3 files if desired, but at least one must be provided."
-       "\n"))
+  (str "sorted - A simple program for sorting people.\n\nUsage: sorted "
+       "[options] file1 file2 file3 ...\n\nOptions:\n  -d, --dob       "
+       " Sort output by date of birth, ascending.\n  -g, --gender     "
+       "Sort by gender, female first, then by last name ascending.\n  "
+       "-h, --help       Prints this help text...\n  -l, --last       "
+       "Sort output by last name, descending.\n  -p, --port PORT  Port number. "
+       "If not specified, doesn't start server.\n\nThis program can support "
+       "more than 3 files if desired, but at least one must be provided.\n"))
 
 (defn usage? [r] (= usage-summary (::c/exit-msg r)))
 (defn exit-inst? [r] (s/valid? ::c/exit-instructions r))
