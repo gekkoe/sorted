@@ -4,6 +4,10 @@
             [failjure.core :as f])
   (:import (java.io BufferedReader FileReader)))
 
+;;;============================================================================
+;;;                              P U B L I C
+;;;============================================================================
+
 (defn exists?
   "Tests if a file exists.
   Returns an Failure object if an exception is thrown."
@@ -22,6 +26,10 @@
                                 (vec (line-seq rdr))))]
                 text
                 (f/fail "Error in text-read: %s" (f/message text))))
+
+;;;============================================================================
+;;;                        S P E C    R E L A T E D
+;;;============================================================================
 
 (s/fdef exists?
   :args (s/cat :file-name string?)
