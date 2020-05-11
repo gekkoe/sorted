@@ -13,8 +13,11 @@
             [sorted.people :as ppl])
   (:import (java.io ByteArrayInputStream)))
 
+;; Disabled in prod builds
+(def prone-enabled? (= "true" (System/getProperty "prone.enabled")))
+
 ;;;============================================================================
-;;;                          C O N T E N T
+;;;                    C O N T E N T    R E L A T E D
 ;;;============================================================================
 
 (defn strs->html
@@ -50,8 +53,8 @@
 
 (defn already-exists?
   "Expects a liberator context with a :sorted.handler/person key containing
-  a :sorted.person/person. Returns true if the person is already in the
-  people collection."
+  a :sorted.person/person. Returns a :sorted.handler/true-msg if the person is
+  already in the people collection. Otherwise returns logical false."
   [ctx]
   (when (some #{(::person ctx)} @ppl/people)
     [true {:message "Record for this person already exists."}]))
@@ -72,9 +75,9 @@
   (= :post (get-request-method ctx)))
 
 (defn check-content-type
-  "Returns true if the liberator context ctx is a post request with a content type
-  contained in the string collection content-types. Otherwise returns
-  a :sorted.handler/false-msg."
+  "If the liberator context ctx is not a post request, returns true. Otherwise,
+  returns true if ctx has a content type matching one in content-types or
+  a :sorted.handler/false-msg if not."
   [ctx content-types]
   (if (posting? ctx)
     (if (some #{(get-content-type ctx)} content-types)
@@ -92,12 +95,10 @@
     true))
 
 (defn parse-person-str
-  "If the liberator context ctx is not a post request, returns logical false. If
-  it is a post request but the body cannot be parsed into a person, returns
-  a :sorted.handler/msg-map. Otherwise, returns a :sorted.handler/false-map with
-  a map containing a :sorted.handler/person key containing
-  the :sorted.person/person parsed from the ctx body. This can then be used
-  further down the liberator decision tree."
+  "If the liberator context ctx is not a post request, returns logical false.
+  If the body cannot be parsed into a person, returns a :sorted.handler/msg-map.
+  Otherwise, returns a :sorted.handler/false-map with a :sorted.handler/person
+  key containing the :sorted.person/person parsed from the ctx body."
   [ctx]
   (when (posting? ctx)
     (if-let [body (slurp (-> ctx :request :body))]
@@ -110,21 +111,21 @@
            invalid)
           invalid)))))
 
-;; NOTE: The check of already-exists? here is redundant and may be
-;; unnecessary, but I couldn't find any atomicity guarantees in the liberator
-;; documentation so I've included it to prevent a possible race condition that
-;; would allow duplicates to enter the people collection. From the user's
-;; perspective it will appear that they succeeded in adding the person
-;; regardless since the resulting people collection will be the same.
+;; NOTE: Checking if the person is already in the people coll here is redundant
+;; and may be unnecessary, but I couldn't find any atomicity guarantees in the
+;; liberator documentation so I've included it to prevent a possible race
+;; condition that would allow duplicates to enter the people collection. From
+;; the user's perspective it will appear that they succeeded in adding the
+;; person regardless since the resulting people collection will be the same.
 (defn post-person!
   "Adds a :sorted.person/person contained in a :sorted.handler/person key of the
   liberator context ctx to the people list if it doesn't already exist. Always
   returns a :sorted.handler/msg-map"
   [ctx]
   (let [person (::person ctx)]
-    (swap! ppl/people (fn [old-ps] (if (already-exists? person)
-                                     old-ps
-                                     (conj old-ps person))))
+    (swap! ppl/people (fn [old-ps] (if (some #{person} old-ps)
+                                    old-ps
+                                    (conj old-ps person))))
     {:message {:added (p/person->un-person person)}}))
 
 (defn sorted-people
@@ -162,7 +163,7 @@
    :handle-not-found ::error))
 
 ;;;============================================================================
-;;;                                A P P
+;;;                             P U B L I C
 ;;;============================================================================
 
 (defroutes app
@@ -173,19 +174,23 @@
   (GET "/records/name" [] (sorted-resource ::p/last-name))
   (not-found (html [:p "Page not found." site-map]) ))
 
-(def prone-enabled? (= "true" (System/getProperty "prone.enabled")))
 (def handler
   (cond-> app
     prone-enabled? prone/wrap-exceptions))
 
 ;;;============================================================================
-;;;                              S P E C S
+;;;                          S P E C    R E L A T E D
 ;;;============================================================================
 
-(def content-type-gen (s/gen #{"text/html" "text/plain" "application/json"}))
+(def content-type-set #{"text/html" "text/plain" "application/json"})
+(def content-type-gen (s/gen content-type-set))
 (def content-type-map-gen
   (gen/fmap (fn [c-type] {"content-type" c-type})
             (gen/one-of [content-type-gen (s/gen string?)])))
+
+;; Used to simulate ring requests
+(defn make-stream [p] (ByteArrayInputStream. (.getBytes ^String p)))
+
 (s/def ::content-type (s/with-gen string? (constantly content-type-gen)))
 (s/def ::content-types (s/coll-of ::content-type :into []))
 (s/def ::message (s/or :str string? :map map?))
@@ -196,21 +201,18 @@
 (s/def ::true-msg  (s/tuple true?  ::msg-map))
 (s/def ::headers (s/with-gen map? (constantly content-type-map-gen)))
 (s/def ::request-method #{:post :get})
-(s/def ::body (s/with-gen any?
-                #(gen/fmap (fn [p] (ByteArrayInputStream. (.getBytes p)))
-                           (s/gen ::p/person-str))))
+(s/def ::body (s/with-gen any? #(gen/fmap make-stream (s/gen ::p/person-str))))
 (s/def ::request (s/keys :req-un [::headers ::request-method ::body]))
 (s/def ::ctx (s/keys :req-un [::request]))
 ;; Make sure that the person in ::person sometimes matches one in ppl/people
 ;; if there are any.
 (s/def ::person (s/with-gen ::p/person
                 #(gen/one-of [(s/gen ::p/person)
-                              (if (pos? (count @ppl/people))
+                              (if (seq @ppl/people)
                                 (gen/elements @ppl/people)
                                 (s/gen ::p/person))])))
 (s/def ::person-map (s/keys :req [::person]))
 (s/def ::person-ctx (s/keys :req [::person] :req-un [::request]))
-(s/def ::person-kw #{::person})
 (s/def ::records (s/* ::p/un-person))
 (s/def ::un-people (s/keys :req-un [::records]))
 (s/def ::un-people-map (s/keys :req [::un-people]))
