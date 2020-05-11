@@ -19,11 +19,6 @@
    [sorted.server :as svr]
    [java-time-literals.core]))
 
-;; KLUDGE: For some reason this can't be found on the classpath if I just
-;;   include it in the ns statment above. It's convenient to have it aliased
-;;   for st/check calls though.
-(alias 'stc 'clojure.spec.test.check)
-
 (alter-var-root #'s/*explain-out* (constantly expound/printer))
 
 (add-tap (bound-fn* clojure.pprint/pprint))
