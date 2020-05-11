@@ -1,10 +1,11 @@
 (ns sorted.handler-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.spec.alpha :as s]
+            [clojure.spec.gen.alpha :as gen]
+            [clojure.test :refer :all]
             [sorted.handler :as handler]
             [sorted.helpers :as h]
             [sorted.people :as ppl]
-            [sorted.person :as p]
-            [clojure.spec.alpha :as s]))
+            [sorted.person :as p]))
 
 (def num-tests 1000)    ; Number of times to check function specs.
 (def checks? (h/checks? num-tests))
@@ -17,11 +18,20 @@
 (def person2 (p/str->person p2))
 (def test-ctx {:request {:headers {"content-type" :test}
                          :request-method :post}})
+(def valid-content-types (into [] handler/content-type-set))
 
 (s/def ::non-post (s/and simple-keyword? #(not= :post %)))
 (s/def ::any any?)
-(def non-post-ctx-list (map (fn [x] {:request {:request-method x}}) (samples ::non-post)))
-(def post-ctx {:request {:request-method :post}})
+(def post-ctx {:request {:headers {"content-type" ""} :request-method :post}})
+(def non-post-ctx-list (map #(assoc-in post-ctx [:request :request-method] %)
+                            (samples ::non-post)))
+(defn make-post [content-type] (assoc-in
+                                post-ctx
+                                [:request :headers "content-type"]
+                                content-type))
+(def post-ctx-list (map make-post (gen/sample
+                                   handler/content-type-gen
+                                   num-samples)))
 
 (deftest strs->html-test
   (testing "Conforms to spec."
@@ -57,19 +67,91 @@
 (deftest check-content-type-test
   (testing "Conforms to spec."
     (is (checks? 'sorted.handler/check-content-type)))
-  (testing "Returns true if request method is not post regardless of content-types"
+  (testing (str "Returns true if request method is not post regardless of "
+                "content-types")
     (is (every? true? (map handler/check-content-type
                            non-post-ctx-list
                            (samples ::handler/content-types)))))
-  (testing "Returns true if request method is post and content-types "))
+  (testing (str "Returns true if a post ctx has a content type matching one in "
+                "content-types")
+    (is (every? true? (map #(handler/check-content-type % valid-content-types)
+                           post-ctx-list))))
+  (testing (str "Returns a ::handler/false-msg if a post ctx does not have a "
+                "content type matching one in content-types")
+    (is (every? #(s/valid? ::handler/false-msg %)
+                (map #(handler/check-content-type % ["unknown" "types"])
+                     post-ctx-list)))))
+
+(deftest check-people-count-test
+  (testing "Conforms to spec."
+    (is (checks? 'sorted.handler/check-people-count)))
+  (testing (str "Returns true if request method is not post")
+    (is (every? true? (map handler/check-people-count non-post-ctx-list))))
+  (testing (str "Returns true if ctx is a post request and post limit is not "
+                "exceeded")
+    (with-redefs [ppl/people (atom [])]
+      (is (every? true? (map handler/check-people-count post-ctx-list)))))
+  (testing (str "Returns a ::handler/false-map if ctx is a post request and the "
+                "post limit is exceeded")
+    (with-redefs [ppl/people (atom (range ppl/post-limit))]
+      (is (every? #(s/valid? ::handler/false-msg %)
+                  (map handler/check-people-count post-ctx-list))))))
 
 (deftest parse-person-str-test
   (testing "Conforms to spec."
-    (is (checks? 'sorted.handler/parse-person-str))))
+    (is (checks? 'sorted.handler/parse-person-str)))
+  (testing "Returns logical false if request method is not post"
+    (is (not-any? true? (map handler/parse-person-str non-post-ctx-list))))
+  (let [p (gen/generate (s/gen ::handler/person-ctx))
+        p-post (assoc-in p [:request :request-method] :post)
+        bad-p "not a person string"
+        bad-p-post (assoc-in p-post [:request :body] (handler/make-stream bad-p))
+        result (handler/parse-person-str p-post)
+        bad-result (handler/parse-person-str bad-p-post)]
+    (testing (str "If ctx is a post request and contains a valid ::p/person-str "
+                  "in the body, returns a ::handler/false-map")
+      (is (s/valid? ::handler/false-map result))
+      (testing "containing a valid ::p/person in its ::handler/person key"
+        (is (s/valid? ::p/person (::handler/person (second result))))))
+    (testing (str "If ctx is a post request and contains an invalid "
+                  "::p/person-str in the body, returns a ::handler/msg-map")
+      (is (s/valid? ::handler/msg-map bad-result)))))
 
 (deftest post-person!-test
+  (with-redefs [ppl/people (atom [])]
     (testing "Conforms to spec."
       (is (checks? 'sorted.handler/post-person!))))
+  (let [p (gen/generate (s/gen ::p/person))
+        ;; Make a person with an impossible name, so it's guaranteed unique
+        diff-p (assoc p
+                ::p/last-name
+                (gen/generate (s/gen ::p/delim-str)))
+        ctx (gen/generate (s/gen ::handler/ctx))
+        insert-p #(assoc ctx ::handler/person %)
+        p-ctx (insert-p p)
+        diff-p-ctx (insert-p diff-p)]
+
+    (with-redefs [ppl/people (atom [p])]
+      (testing "If a person already exists in the collection"
+        (let [result (handler/post-person! p-ctx)
+              result-un-p (-> result :message :added)]
+          (testing "the collection will remain unchanged"
+            (is (= [p] @ppl/people)))
+          (testing "returns a ::handler/msg-map"
+            (is (s/valid? ::handler/msg-map result))
+            (testing "containing a ::p/un-person version of the ctx person"
+              (is (= (p/person->un-person p) result-un-p)))))))
+
+    (with-redefs [ppl/people (atom [diff-p])]
+      (testing "If a person does not already exist in the collection"
+        (let [result (handler/post-person! p-ctx)
+              result-un-p (-> result :message :added)]
+          (testing "the collection will now contain the person"
+            (is (= [diff-p p] @ppl/people)))
+          (testing "returns a ::handler/msg-map"
+            (is (s/valid? ::handler/msg-map result))
+            (testing "containing a ::p/un-person version of the ctx person"
+              (is (= (p/person->un-person p) result-un-p)))))))))
 
 (deftest sorted-people-test
   (testing "Conforms to spec."
