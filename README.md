@@ -6,15 +6,17 @@ Implementation Decisions
 
 ### Running the Program
 The Linux executable version of this program is called __sorted.run__ and can be
-downloaded from the lastest [release](https://github.com/gekkoe/sorted/releases)
-To see the command-line options and usage fun `sorted.run --help` If it needs to
+downloaded from the latest [release](https://github.com/gekkoe/sorted/releases)
+To see the command-line options and usage run `sorted.run --help` If it needs to
 be run on a different platform, the __sorted.jar__ file can be built using `lein
 uberjar` anywhere within the project. This will build a self-contained jar file
-under $PROJECTROOT/target/uberjar that can be run using the command `java -jar
-sorted.jar OptionsAndFilesHere` or it can be turned into a GraalVM fallback
-executable that is smaller but still requires a java installation by using
-graal's native-image program on the jar file, preferably with the
+under _$PROJECTROOT/target/uberjar_ that can be run using the command `java -jar
+sorted.jar OptionsAndFilesHere` or it may be possible to compile to a GraalVM
+fallback executable that is smaller but still requires a java installation by
+using Graal's native-image program on the jar file, preferably with the
 _--initialize-at-build-time_ flag set.
+
+Sample input files can be found in the _$PROJECTROOT/env/dev/resources_ folder.
 
 ### Language Choice
 * Though not stated directly in the specifications, the implication that Clojure
@@ -30,11 +32,11 @@ several libraries that appear to be in common use for the tasks at hand that I'm
 either familiar with or that cover technologies that I discussed in a prior
 interview with the customer and would like to incorporate here to learn more
 about them.
-* I've also looked to [luminusweb.com](http://luminusweb.com) for example code
-of how to set up portions of this project. I've found in the past that they
-provide a sane starting point for simple Clojure web apps. That said, they tend
-to put quite a bit more than I need for this project in their baseline
-templates, so I've only used a few ideas from them here.
+* I've also looked to [luminusweb.com](http://luminusweb.com) for examples of
+how to set up portions of this project. I've found in the past that they provide
+a sane starting point for simple Clojure web apps. That said, they tend to put
+quite a bit more than I need for this project in their baseline templates, so
+I've only used a few ideas from them here.
 * The following will be used for this project:
   - clojure.java-time - A Java 8+ Date-Time API wrapper library.
   - clojure.spec - A data specification library that I'd like to explore more
@@ -49,6 +51,7 @@ templates, so I've only used a few ideas from them here.
   - expound - Provides easier-to-read spec reports for use during development.
   - failjure - A monadic error handler to maintain referential integrity and
     readability.
+  - hiccup - Renders HTML from Clojure.
   - jetty - An HTTP server.
   - java-time-literals - Developer convenience library for copying/pasting date
     literals.
@@ -63,23 +66,24 @@ profiles.
   - tools.cli - A command line argument parser.
 
 ### Build Tools
-* This project will be using lein.
+* This project will be built using lein.
 * I'll be coding the project in Emacs with Spacemacs, but it should open and
 build fine in any other properly configured Clojure development environment.
-* To create a self-contained executable for the releases I'm using a script that
-can be concatinated with a jar file and runs it, passing in any commands given.
-The file name of the executable is __sorted.run__ and it can be rebuilt using the
-shell command __build-executable.sh__ in the project's root.
+* To create a self-contained executable for the releases I'm using a script
+called _stub.sh_ which can be found in _$PROJECTROOT/env/dev/build-tools_ that
+can be concatenated with a jar file and runs it, passing in any args it
+receives. The file name of the executable is __sorted.run__ and it can be
+rebuilt using the shell command __build-executable.sh__ in the project's root.
 * I've been able to build a "fallback" version of an executable using GraalVM,
 but since I haven't been able to get its native-image to run without resorting
 to a fallback and I'm not certain how well such a file will work in various run
-environments, I've decided not to use it for executable at this time. It does,
-however, look like a very promising way to handle such things in the future,
-once I better understand their system.
+environments, I've decided not to use it as the release executable at this time.
+It does, however, look like a very promising way to handle such things in the
+future, once I better understand their system.
 
 ### Design Decisions & Things Learned
-* This has been my first real exposure to spec and generative testing. It took a
-little getting used to at first, but I'm quite impressed with the compliance
+* This has been my first real exposure to spec and generative testing. It took
+some getting used to at first, but I'm quite impressed with the compliance
 testing that they allow, and have used them to weed out some unexpected edge
 case bugs.
 * I considered using cli-matic instead of tools.cli, but it seems to be rather
@@ -96,7 +100,7 @@ a java.time.LocalDate, so this is what I ended up settling on.
 * I tried to make as few assumptions about the nature of the data files as
 possible. The design spec said that I could assume that the values would not
 contain other delimiters, but I found that for the sake of the code's logic and
-testing it was sometimes simpler to just filter out that possibilty.
+testing it was sometimes simpler to just filter out that possibility.
 * I've limited the range of acceptable dates to the years 1 through 9999. I
 tried with the built-in MIN and MAX dates but there are some off-by-one bugs and
 sign switching that happen with the M/d/yyyy formatter once the year numbers
@@ -123,3 +127,8 @@ decided to leave the current version for demo purposes, as there were a number
 of interesting problems to solve in the process, and such code would be useful
 under somewhat different circumstances. If this were going to be production code
 though, I would certainly look to rewrite that part for added simplicity.
+* The logging included in this project is quite rudimentary. If it were going
+into production, I'd want to change the f/fail functions to a log-fail pass
+through, add a few more info logs to the handler, etc. But I reasoned that the
+addition and configuration of logging capability was adequate for the task at
+hand.
