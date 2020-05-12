@@ -63,10 +63,18 @@
               spec n (f/message samples)))
      (f/fail "Error in gen-samples: `%s` is not a valid spec." spec))))
 
+(defn get-free-port
+  "Returns an available port."
+  []
+  (let [socket (java.net.ServerSocket. 0)]
+    (.close ^java.net.ServerSocket socket)
+    (.getLocalPort ^java.net.ServerSocket socket)))
+
 (defn ok-map
   "Monadic map for failjure-aware functions. Attempts to map f, a function taking
   one argument that returns a Failure object upon failure, over xs. Short
-  circuits if anything fails. Returns a new collection, or a Failure object."
+  circuits if anything fails. Returns a new collection, or a Failure object.
+  This function is not lazy."
   [f xs]
   (try
     (letfn [(f' [x y] (f/if-let-ok? [n (f y)]
@@ -136,6 +144,10 @@
   :ret (s/or :partial fn?
              :success coll?
              :failure f/failed?))
+
+(s/fdef get-free-port
+ :args (s/cat)
+ :ret (s/and int? #(< 1023 % 49152)))
 
 (s/fdef ok-map
   :args (s/cat :f ::failjure-fn :xs sequential?)
