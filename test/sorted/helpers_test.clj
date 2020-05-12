@@ -4,10 +4,15 @@
             [clojure.spec.alpha :as s]
             [clojure.spec.test.alpha :as st]))
 
-(def num-tests 300)
+(def num-tests 1000)
 (def checks? (h/checks? num-tests))
+(def num-samples 250)
 (s/def ::non-map (s/and any? (complement map?)))
 (s/def ::any any?)
+
+(deftest any-or-test
+  (testing "Conforms to spec"
+    (is (checks? 'sorted.helpers/any-or))))
 
 (deftest checks?-test
   (testing "Conforms to spec."
@@ -30,12 +35,16 @@
   (testing "Returns false when m is not a map"
     (is (not-any? #(apply h/contains-all?
                           %
-                          (random-sample 0.01 (h/gen-samples ::any num-tests)))
-                  (h/gen-samples ::non-map num-tests)))))
+                          (random-sample 0.01 (h/gen-samples ::any num-samples)))
+                  (h/gen-samples ::non-map num-samples)))))
 
 (deftest gen-samples-test
   (testing "Conforms to spec."
     (is (checks? 'sorted.helpers/gen-samples))))
+
+(deftest get-free-port-test
+  (testing "Conforms to spec."
+    (is (checks? 'sorted.helpers/get-free-port))))
 
 (deftest ok-map-test
   (testing "Conforms to spec."
