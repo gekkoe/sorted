@@ -42,10 +42,10 @@
                 nil))
 
 (defn split-trim
-  "Splits the string s using the regex pattern delim and trims any extra
-  whitespace from the front and back of each substring. Returns a vector of the
-  substrings.
-  Returns a Failure object if unsuccessful."
+  "Splits the string s using the regex pattern delim, which must be a
+  valid ::delim-regex, and trims any extra whitespace from the front and back of
+  each substring. Returns a vector of the substrings. Returns a Failure object
+  if unsuccessful."
   [s delim]
   (if (and (s/valid? ::person-str s)
            (s/valid? ::delim-regex delim)
@@ -71,8 +71,8 @@
                          s (f/message result)))))
 
 (defn strs->vals
-  "Attempts to convert a seq of 5 strings to vals that can be converted into a
-  person.
+  "Attempts to convert a sequential collection of 5 strings to values that can be
+  converted into a person.
   Returns a Failure object if unsuccessful."
   [ss]
   (f/if-let-ok? [date (f/try* (jt/local-date formatter (last ss)))]
@@ -81,8 +81,7 @@
                         ss (f/message date))))
 
 (defn vals->person
-  "Given a vector of vals such as the output of strs->vals, creates a map
-  conforming to sorted.person/person.
+  "Given a :sorted.person/person-vals, creates a :sorted.person/person.
   Returns a Failure object if unsuccessful."
   [vs]
   (if (s/valid? ::person-vals vs)
@@ -203,24 +202,27 @@
                                         (not (re-find line-breaks %)))
                                   (gen/string) 100))
 
+;; Generate a valid random person-str
+(def person-str-gen (gen/fmap
+                     (fn [[last first gender color dob delim]]
+                       (join delim [last
+                                    first
+                                    gender
+                                    color
+                                    (jt/format formatter dob)]))
+                     (gen/tuple non-delim-gen                           ; last
+                                non-delim-gen                           ; first
+                                non-delim-gen                           ; gender
+                                non-delim-gen                           ; color
+                                date-gen                                ; dob
+                                (gen/elements (vec delim-str-set)))))   ; delim
+
 (s/def ::person-str
   (s/with-gen (s/and string?
                      #(not (re-find line-breaks %))
                      #(or (re-matches non-ws-delims %)
                           (re-matches ws-delims %)))
-              #(gen/fmap
-                (fn [[last first gender color dob delim]]
-                  (join delim [last
-                               first
-                               gender
-                               color
-                               (jt/format formatter dob)]))
-                (gen/tuple non-delim-gen                           ; Last
-                           non-delim-gen                           ; first
-                           non-delim-gen                           ; gender
-                           non-delim-gen                           ; color
-                           date-gen                                ; dob
-                           (gen/elements (vec delim-str-set))))))  ; delim
+    (constantly person-str-gen)))
 
 (s/fdef get-delim
   :args (s/cat :s (h/any-or ::person-str))

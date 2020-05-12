@@ -1,12 +1,12 @@
 (ns sorted.person-test
-  (:require [clojure.test :refer :all]
-            [sorted.person :as p]
-            [sorted.helpers :as h]
-            [clojure.spec.alpha :as s]
+  (:require [clojure.spec.alpha :as s]
+            [clojure.spec.gen.alpha :as gen]
+            [clojure.test :refer :all]
+            [failjure.core :as f]
             [java-time :as jt]
             [java-time.local]
-            [clojure.spec.gen.alpha :as gen]
-            [failjure.core :as f]))
+            [sorted.person :as p]
+            [sorted.helpers :as h]))
 
 (def num-samples 1000) ; Amount of sample data to produce.
 (def gen-samples (h/gen-samples num-samples))
@@ -15,9 +15,7 @@
 
 (def min-date (jt/local-date p/formatter "1/1/0001"))
 (def max-date (jt/local-date p/formatter "12/31/9999"))
-
 (def num-person-fields 5)
-
 (def valid-person {::p/last-name "Doe"
                    ::p/first-name "Jane"
                    ::p/gender "Female"
