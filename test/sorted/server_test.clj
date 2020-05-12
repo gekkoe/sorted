@@ -16,22 +16,22 @@
           (is (= port (svr/get-port))))
 
         ;; Be sure to stop test server before leaving with-redefs
-        (svr/stop-server!))))
-
-  (deftest start-server!-test
-    (let [port (h/get-free-port)]
-      (with-redefs [svr/server (atom nil)]
-        (testing (str "Returns an org.eclipse.jetty.server.Server object on "
-                      "success. Returns a Failure object if something fails.")
-          (let [server (svr/start-server! port)]
-            (is (instance? org.eclipse.jetty.server.Server server))
-            (svr/stop-server!)))
-        (testing "Returns a Failure object on failure"
-          (let [impossible-port 90000]
-            (is (f/failed? (svr/start-server! impossible-port)))))
-
-        ;; Be sure to stop test server before leaving with-redefs
         (svr/stop-server!)))))
+
+(deftest start-server!-test
+  (let [port (h/get-free-port)]
+    (with-redefs [svr/server (atom nil)]
+      (testing (str "Returns an org.eclipse.jetty.server.Server object on "
+                    "success. Returns a Failure object if something fails.")
+        (let [server (svr/start-server! port)]
+          (is (instance? org.eclipse.jetty.server.Server server))
+          (svr/stop-server!)))
+      (testing "Returns a Failure object on failure"
+        (let [impossible-port 90000]
+          (is (f/failed? (svr/start-server! impossible-port)))))
+
+      ;; Be sure to stop test server before leaving with-redefs
+      (svr/stop-server!))))
 
 (deftest stop-server!-test
   (with-redefs [svr/server (atom nil)]
