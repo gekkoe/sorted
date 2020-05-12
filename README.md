@@ -1,10 +1,9 @@
 sorted - A simple program to sort people.
 =====================================================
 
-Implementation Decisions
+Running the Program
 -----------------------------
 
-### Running the Program
 The Linux executable version of this program is called __sorted.run__ and can be
 downloaded from the latest [release](https://github.com/gekkoe/sorted/releases)
 To see the command-line options and usage run `sorted.run --help` If it needs to
@@ -17,6 +16,9 @@ using Graal's native-image program on the jar file, preferably with the
 _--initialize-at-build-time_ flag set.
 
 Sample input files can be found in the _$PROJECTROOT/env/dev/resources_ folder.
+
+Implementation Decisions
+-----------------------------
 
 ### Language Choice
 * Though not stated directly in the specifications, the implication that Clojure
