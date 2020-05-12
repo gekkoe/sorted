@@ -26,7 +26,7 @@
                ::p/gender    (fn [x y] (compare  (sort-kw x) (sort-kw y)))
                ::p/last-name (fn [x y] (compare  (sort-kw y) (sort-kw x)))
                ::p/dob       (fn [x y] (compare [(sort-kw x) (::p/last-name x)]
-                                               [(sort-kw y) (::p/last-name y)]))
+                                                [(sort-kw y) (::p/last-name y)]))
                (constantly 0))] ; if no valid kw, just don't sort
     (vec (sort comparator @people))))
 
